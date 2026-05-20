@@ -1,0 +1,5 @@
+// Auth Controllers - Will be implemented in Day 2
+// - registerController
+// - loginController
+// - getProfileController
+// - deleteAccountController (GDPR)

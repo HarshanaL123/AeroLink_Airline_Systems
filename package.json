@@ -1,0 +1,25 @@
+{
+  "name": "aerolink-airline-systems",
+  "version": "1.0.0",
+  "description": "AeroLink Airline Systems - Cloud-native microservices platform",
+  "private": true,
+  "workspaces": [
+    "services/auth-service",
+    "services/flight-service",
+    "services/booking-service",
+    "services/baggage-service",
+    "services/notification-service"
+  ],
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "dev:down": "docker-compose down",
+    "test": "npm run test --workspaces --if-present",
+    "seed": "node scripts/seed-db.js",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "author": "AeroLink Development Team",
+  "license": "MIT"
+}
