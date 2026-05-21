@@ -34,16 +34,16 @@ provider "aws" {
 # =============================================================================
 
 # DynamoDB Tables
-# module "dynamodb" {
-#   source      = "./modules/dynamodb"
-#   environment = var.environment
-# }
+module "dynamodb" {
+  source      = "./modules/dynamodb"
+  environment = var.environment
+}
 
 # IAM Roles & Policies
-# module "iam" {
-#   source      = "./modules/iam"
-#   environment = var.environment
-# }
+module "iam" {
+  source      = "./modules/iam"
+  environment = var.environment
+}
 
 # ECS Cluster & Services
 # module "ecs" {
