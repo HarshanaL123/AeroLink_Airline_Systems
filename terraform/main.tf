@@ -52,10 +52,10 @@ module "iam" {
 # }
 
 # API Gateway
-# module "api_gateway" {
-#   source      = "./modules/api-gateway"
-#   environment = var.environment
-# }
+module "api_gateway" {
+  source      = "./modules/api-gateway"
+  environment = var.environment
+}
 
 # EventBridge
 # module "eventbridge" {
