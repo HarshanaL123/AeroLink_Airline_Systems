@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
@@ -24,9 +25,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Rate Limiter Setup (Enhancement #4)
+const authLimiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes by default
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // Limit each IP to 100 requests per window
+  message: {
+    success: false,
+    error: 'Too many requests from this IP, please try again after 15 minutes',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // API Routes (v1 — Enhancement #3)
-// Routes will be added in Day 2
-// app.use('/api/v1/auth', require('./routes/auth.routes'));
+app.use('/api/v1/auth', authLimiter, require('./routes/auth.routes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -38,10 +50,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`✈️  Auth Service running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/health`);
-});
+// Start Server only if not imported by tests
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`✈️  Auth Service running on port ${PORT}`);
+    console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  });
+}
 
 module.exports = app;
