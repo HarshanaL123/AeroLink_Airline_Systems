@@ -25,8 +25,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes (v1 — Enhancement #3)
-// Routes will be added in Day 4
-// app.use('/api/v1/bookings', require('./routes/booking.routes'));
+app.use('/api/v1/bookings', require('./routes/booking.routes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -39,9 +38,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`✈️  Booking Service running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/health`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`✈️  Booking Service running on port ${PORT}`);
+    console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  });
+}
 
 module.exports = app;

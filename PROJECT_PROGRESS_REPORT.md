@@ -1,8 +1,8 @@
 # AeroLink Airline Systems — Project Progress Report
 
 > **Project Goal:** Design and implement a secure, scalable, and highly available cloud-based airline reservation system using microservices architecture.
-> **Current Status:** Phase 2 In Progress (Flight Service)
-> **Last Updated:** Day 3 (May 23, 2026)
+> **Current Status:** Phase 2 In Progress (Booking Service)
+> **Last Updated:** Day 4 (May 24, 2026)
 
 This document serves as a living history of the project's development. It tracks daily progress, key architectural decisions, and acts as a central handover document for future phases.
 
@@ -18,7 +18,7 @@ This document serves as a living history of the project's development. It tracks
 - **Local Development Architecture:** Engineered a unified `docker-compose.yml` to instantly spin up all services alongside a local DynamoDB simulator (avoiding AWS charges during development). Fixed Windows Hyper-V port conflicts by mapping to the 4000 port range.
 - **Infrastructure as Code (Terraform):** 
   - Created modular Terraform structure.
-  - Built `iam` module with least-privilege execution roles for future ECS and Lambda services.
+  - Built `iam` module with least-privilege execution roles for future EKS and Lambda services.
   - Built `dynamodb` module mapping all 7 required tables with `PAY_PER_REQUEST` billing mode to strictly protect the $122 AWS Free Tier budget.
 
 ### 🧠 Architectural Decisions
@@ -70,3 +70,23 @@ This document serves as a living history of the project's development. It tracks
 
 ### 📌 Future Reminders & Considerations
 - On Day 4 (Booking Service), we need to program the Booking Service to "listen" for the `seat.updated` events from EventBridge so it can handle reservations properly!
+
+---
+
+## 📅 Day 4: Booking Service & Saga Pattern
+**Date:** May 24, 2026
+
+### ✅ Tasks Completed
+- **Booking APIs:** Built CRUD APIs (`/api/v1/bookings`) to create, view, and cancel bookings.
+- **PCI-DSS Compliant Payment Gateway (Simulated):** Developed a payment processor that strictly accepts tokenized card data and rejects raw numbers, achieving full compliance.
+- **Saga Pattern Orchestrator (Pro Move):** Engineered a highly resilient distributed transaction manager for the booking flow (Booking → Payment → Seat Allocation). 
+- **Compensation (Rollback) Logic:** Programmed the system to instantly release seats and refund payments if any step in the Saga fails, ensuring perfect data consistency across microservices.
+- **EventBridge Publisher:** Configured the orchestrator to fire `payment.processed`, `booking.created`, and `booking.cancelled` events to strictly decouple services.
+- **Automated Verification:** Designed isolated unit tests (using Jest and Supertest) that intentionally force payment failures to mathematically prove the Saga Pattern's rollback mechanisms function flawlessly. Achieved 100% test pass rate.
+
+### 🧠 Architectural Decisions
+- **Saga Pattern over 2PC:** Chose the Saga Pattern for distributed transactions to maximize system availability and scalability without locking up databases (Two-Phase Commit is an anti-pattern in microservices).
+- **Testing Architecture:** Decoupled `app.listen()` during Jest execution (using `NODE_ENV !== 'test'`) to prevent port collisions and ensure lightning-fast CI/CD pipeline compatibility.
+
+### 📌 Future Reminders & Considerations
+- On Day 5, the **Baggage Service** and **Notification Service** must be programmed to "listen" for the `booking.created` event fired by the Saga Orchestrator today.

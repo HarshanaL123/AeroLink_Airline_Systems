@@ -8,19 +8,19 @@ AeroLink is composed of **5 independent microservices** communicating via REST A
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **Auth Service** | 3001 | Authentication, JWT tokens, RBAC |
-| **Flight Service** | 3002 | Flight management, search, seat maps |
-| **Booking Service** | 3003 | Reservations, payments, seat allocation |
-| **Baggage Service** | 3004 | Baggage tracking, status updates |
+| **Auth Service** | 4001 | Authentication, JWT tokens, RBAC |
+| **Flight Service** | 4002 | Flight management, search, seat maps |
+| **Booking Service** | 4003 | Reservations, payments, seat allocation |
+| **Baggage Service** | 4004 | Baggage tracking, status updates |
 | **Notification Service** | Lambda | Event-driven notifications |
 
 ## Tech Stack
 
 - **Backend**: Node.js (Express.js)
 - **Frontend**: React / Next.js
-- **Database**: AWS DynamoDB
+- **Database**: AWS DynamoDB + ElastiCache (Redis)
 - **Messaging**: AWS EventBridge + SQS + SNS
-- **Containerization**: Docker + AWS ECS
+- **Containerization**: Docker + AWS EKS
 - **Serverless**: AWS Lambda
 - **IaC**: Terraform
 - **CI/CD**: GitHub Actions
@@ -58,10 +58,10 @@ npm run seed
 
 ### Service Health Checks
 ```bash
-curl http://localhost:3001/health  # Auth Service
-curl http://localhost:3002/health  # Flight Service
-curl http://localhost:3003/health  # Booking Service
-curl http://localhost:3004/health  # Baggage Service
+curl http://localhost:4001/health  # Auth Service
+curl http://localhost:4002/health  # Flight Service
+curl http://localhost:4003/health  # Booking Service
+curl http://localhost:4004/health  # Baggage Service
 ```
 
 ## AWS Deployment
