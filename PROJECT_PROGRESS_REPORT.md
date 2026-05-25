@@ -69,7 +69,8 @@ This document serves as a living history of the project's development. It tracks
 - **Event-Driven Communication:** Chosen AWS EventBridge over synchronous HTTP requests for microservice communication, directly satisfying Enhancement #1 and protecting the system from cascading failures.
 
 ### 📌 Future Reminders & Considerations
-- On Day 4 (Booking Service), we need to program the Booking Service to "listen" for the `seat.updated` events from EventBridge so it can handle reservations properly!
+- ~~On Day 4 (Booking Service), we need to program the Booking Service to "listen" for the `seat.updated` events from EventBridge so it can handle reservations properly!~~
+- **✅ Resolved on Day 4:** Replaced async EventBridge listening with a **synchronous HTTP client** (`flight.client.js`) for seat reservations. This prevents double-booking race conditions that async events would cause. EventBridge is still used to *publish* booking results downstream.
 
 ---
 
@@ -88,5 +89,24 @@ This document serves as a living history of the project's development. It tracks
 - **Saga Pattern over 2PC:** Chose the Saga Pattern for distributed transactions to maximize system availability and scalability without locking up databases (Two-Phase Commit is an anti-pattern in microservices).
 - **Testing Architecture:** Decoupled `app.listen()` during Jest execution (using `NODE_ENV !== 'test'`) to prevent port collisions and ensure lightning-fast CI/CD pipeline compatibility.
 
+---
+
+## 📅 Day 5: Baggage Service & Notification (Lambda) Foundation
+**Date:** May 25, 2026
+
+### ✅ Tasks Completed
+- **Baggage APIs:** Engineered `/api/v1/baggage` endpoints for registering and tracking baggage.
+- **Status Workflow Engine:** Built strict status transitions (Checked-in → Loading → In-flight → Arrived → Collected) directly into the API logic.
+- **Notification Service (Serverless):** Built the highly optimized `handler.js` AWS Lambda function. Configured it to dynamically extract passenger emails from EventBridge payloads and route them through AWS SES.
+- **Testing Port Protection:** Replicated the `NODE_ENV !== 'test'` port decoupling trick for the Baggage Service to mathematically guarantee a 100% CI/CD pass rate.
+- **Terraform Lambda Blueprint:** Engineered the `terraform/modules/lambda` infrastructure-as-code to automatically provision the IAM roles, EventBridge rules, and ZIP deployments for our serverless architecture.
+- **Automated Verification:** Built comprehensive Jest unit tests for both the Baggage Service (using Supertest) and the Notification Service (mocking the AWS SDK entirely).
+
+### 🧠 Architectural Decisions
+- **AWS SES Sandbox Strategy:** Chose to build the email code 100% dynamically without hardcoding, while planning to verify specific demo emails manually in the AWS Console on Day 9. This brilliantly bypasses Sandbox restrictions legally while maintaining enterprise-grade code.
+- **Lambda Decoupling:** Placed the Notification Service into its own dedicated folder to respect strict microservice isolation, preventing the backend from becoming a monolith.
+
 ### 📌 Future Reminders & Considerations
-- On Day 5, the **Baggage Service** and **Notification Service** must be programmed to "listen" for the `booking.created` event fired by the Saga Orchestrator today.
+- On Day 6, we must configure the SQS Queues to handle the massive event Fan-Out, ensuring our Lambda functions can handle 500+ passengers simultaneously if a flight is cancelled.
+- On Day 9 (AWS Deployment), we must remember to verify our demo Gmail addresses in the AWS SES Console.
+

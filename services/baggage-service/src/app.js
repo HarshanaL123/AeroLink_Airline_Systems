@@ -25,8 +25,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes (v1 — Enhancement #3)
-// Routes will be added in Day 5
-// app.use('/api/v1/baggage', require('./routes/baggage.routes'));
+app.use('/api/v1/baggage', require('./routes/baggage.routes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -38,10 +37,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`✈️  Baggage Service running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/health`);
-});
+// Start Server (Pro Move: Decouple from tests to prevent port collision)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`✈️  Baggage Service running on port ${PORT}`);
+    console.log(`📡 Health check: http://localhost:${PORT}/health`);
+  });
+}
 
 module.exports = app;
