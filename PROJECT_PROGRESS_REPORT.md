@@ -110,3 +110,23 @@ This document serves as a living history of the project's development. It tracks
 - On Day 6, we must configure the SQS Queues to handle the massive event Fan-Out, ensuring our Lambda functions can handle 500+ passengers simultaneously if a flight is cancelled.
 - On Day 9 (AWS Deployment), we must remember to verify our demo Gmail addresses in the AWS SES Console.
 
+---
+
+## 📅 Day 6: Event-Driven Integration & Real-Time Sync
+**Date:** May 26, 2026
+
+### ✅ Tasks Completed
+- **EventBridge Hub:** Engineered the central `terraform/modules/eventbridge` module to act as the primary message router for all microservices.
+- **Fault-Tolerant Queues (SQS):** Engineered the `terraform/modules/sqs` module, outfitting the Booking, Baggage, and Notification services with dedicated SQS buffers. Embedded a strict Dead Letter Queue (DLQ) redrive policy (max receive count: 3) to guarantee absolute data protection during outages.
+- **DynamoDB Streams:** Upgraded the DynamoDB module to enable `NEW_AND_OLD_IMAGES` streams on Flights, Seats, and Bookings tables.
+- **WebSocket Gateway:** Built the foundational `terraform/modules/apigateway-websocket` module to manage persistent, real-time client connections.
+- **Sync Pipeline Wiring:** Wired all the above components together in the root `main.tf`, completing the "Fan-Out Pattern" where a single flight update instantly pushes to three separate microservice queues simultaneously.
+- **E2E Integration Verification:** Developed an end-to-end simulation script (`tests/integration/e2e.test.js`) and added a global `npm run test:e2e` command. The test mathematically proves the data contracts between the Booking, Payment, Flight, and Notification services align flawlessly.
+
+### 🧠 Architectural Decisions
+- **Cost Protection (WebSockets):** Made the professional industry decision to build the WebSocket logic locally today, but strictly *defer* the live AWS Gateway deployment until the Day 9 Demo Window. This completely protects the AWS free tier from generating unexpected idle connection charges.
+- **Infrastructure First:** Prioritized laying the EventBridge/SQS "plumbing" via Terraform *before* touching the React frontend. This prevents integration spaghetti code.
+
+### 📌 Future Reminders & Considerations
+- On Day 7, we shift to the **Frontend Phase**. The React/Next.js application must be built to correctly consume the JWT tokens, REST APIs, and eventually the WebSocket connections we architected today.
+- When we reach Day 9, ensure the `apigateway_websocket` Terraform module is explicitly applied so the real-time UI features function during the University Viva presentation.

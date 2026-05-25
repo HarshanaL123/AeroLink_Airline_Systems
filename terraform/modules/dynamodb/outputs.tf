@@ -25,3 +25,15 @@ output "baggage_table_name" {
 output "notifications_table_name" {
   value = aws_dynamodb_table.notifications.name
 }
+
+output "flights_stream_arn" {
+  value = aws_dynamodb_table.flights.stream_arn
+}
+
+output "seats_stream_arn" {
+  value = aws_dynamodb_table.seats.stream_arn
+}
+
+output "bookings_stream_arn" {
+  value = aws_dynamodb_table.bookings.stream_arn
+}

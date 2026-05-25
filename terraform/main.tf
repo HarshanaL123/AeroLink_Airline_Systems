@@ -57,11 +57,66 @@ module "api_gateway" {
   environment = var.environment
 }
 
-# EventBridge
-# module "eventbridge" {
-#   source      = "./modules/eventbridge"
-#   environment = var.environment
-# }
+# =============================================================================
+# Event-Driven Architecture (Sync Pipeline)
+# =============================================================================
+
+# 1. SQS Queues
+module "sqs_booking" {
+  source     = "./modules/sqs"
+  queue_name = "AeroLink-BookingQueue-${var.environment}"
+}
+
+module "sqs_baggage" {
+  source     = "./modules/sqs"
+  queue_name = "AeroLink-BaggageQueue-${var.environment}"
+}
+
+module "sqs_notification" {
+  source     = "./modules/sqs"
+  queue_name = "AeroLink-NotificationQueue-${var.environment}"
+}
+
+# 2. EventBridge Bus and Rules
+module "eventbridge" {
+  source   = "./modules/eventbridge"
+  bus_name = "AeroLink-EventBus-${var.environment}"
+  
+  rules = {
+    "SyncFlightUpdates" = {
+      description   = "Routes flight updates to Booking, Baggage, and Notification services"
+      event_pattern = jsonencode({
+        "source"      = ["aerolink.flight"],
+        "detail-type" = ["flight.updated", "flight.cancelled"]
+      })
+    }
+  }
+
+  targets = [
+    {
+      rule_name = "SyncFlightUpdates"
+      target_id = "BookingQueueTarget"
+      arn       = module.sqs_booking.queue_arn
+    },
+    {
+      rule_name = "SyncFlightUpdates"
+      target_id = "BaggageQueueTarget"
+      arn       = module.sqs_baggage.queue_arn
+    },
+    {
+      rule_name = "SyncFlightUpdates"
+      target_id = "NotificationQueueTarget"
+      arn       = module.sqs_notification.queue_arn
+    }
+  ]
+}
+
+# 3. WebSocket API Gateway (Real-Time Push to Frontend)
+module "apigateway_websocket" {
+  source     = "./modules/apigateway-websocket"
+  name       = "AeroLink-WebSocket-${var.environment}"
+  stage_name = var.environment
+}
 
 # Lambda (Notification Service)
 # module "lambda" {

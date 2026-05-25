@@ -31,9 +31,11 @@ resource "aws_dynamodb_table" "users" {
 
 # 2. Flights Table (Flight Service)
 resource "aws_dynamodb_table" "flights" {
-  name         = "AeroLink-Flights-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "flightId"
+  name             = "AeroLink-Flights-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "flightId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "flightId"
@@ -54,10 +56,12 @@ resource "aws_dynamodb_table" "flights" {
 
 # 3. Seats Table (Flight/Booking Service)
 resource "aws_dynamodb_table" "seats" {
-  name         = "AeroLink-Seats-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "flightId"
-  range_key    = "seatId"
+  name             = "AeroLink-Seats-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "flightId"
+  range_key        = "seatId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "flightId"
@@ -72,9 +76,11 @@ resource "aws_dynamodb_table" "seats" {
 
 # 4. Bookings Table (Booking Service)
 resource "aws_dynamodb_table" "bookings" {
-  name         = "AeroLink-Bookings-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "bookingId"
+  name             = "AeroLink-Bookings-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "bookingId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "bookingId"
