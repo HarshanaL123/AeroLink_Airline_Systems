@@ -194,3 +194,122 @@ select.input option {
   color: var(--text-secondary);
   text-align: center;
 }
+
+/* 2D Interactive Seat Map Styles */
+.seatMapContainer {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.seatMapLegend {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.legendBox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.airplaneFuselage {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: 100px 100px 20px 20px;
+  padding: 3rem 2rem;
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.cockpit {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 20px;
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 50%;
+  border: 1px solid var(--accent-blue);
+}
+
+.seatGrid {
+  display: grid;
+  /* e.g., A B (aisle) C D */
+  grid-template-columns: repeat(2, 1fr) 20px repeat(2, 1fr);
+  gap: 1rem;
+  justify-content: center;
+}
+
+.seatGrid > *:nth-child(4n + 3) {
+  /* Push the 3rd item in a row to the right to create an aisle */
+  grid-column: 4;
+}
+.seatGrid > *:nth-child(4n + 4) {
+  grid-column: 5;
+}
+
+.seatButton {
+  width: 45px;
+  height: 45px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.seatAvailable {
+  background-color: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.seatAvailable:hover {
+  background-color: rgba(52, 211, 153, 0.3);
+  transform: translateY(-2px);
+}
+
+.seatSelected {
+  background-color: var(--accent-blue);
+  color: white;
+  box-shadow: 0 0 15px var(--accent-glow);
+  transform: scale(1.1);
+}
+
+.seatBooked {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.2);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 480px) {
+  .airplaneFuselage {
+    padding: 2rem 1rem;
+  }
+  .seatButton {
+    width: 35px;
+    height: 35px;
+    font-size: 0.75rem;
+  }
+}
+

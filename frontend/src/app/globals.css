@@ -65,3 +65,26 @@ a {
 .animate-fade-in {
   animation: fadeIn 0.6s ease-out forwards;
 }
+
+/* -----------------------------
+   Responsive Mobile Polish
+----------------------------- */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px; /* Scaled down base font for mobile */
+  }
+
+  body {
+    background-attachment: scroll; /* Performance fix for iOS Safari */
+  }
+
+  /* Universal container padding adjustments */
+  .container {
+    padding: 2rem 1rem !important;
+  }
+
+  /* Prevent inputs from zooming on iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

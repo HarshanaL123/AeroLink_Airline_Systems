@@ -1,7 +1,15 @@
 const AWS = require('aws-sdk');
 
+// Configure AWS to use our local DynamoDB simulator
+AWS.config.update({
+  region: process.env.AWS_REGION || 'us-east-1',
+  ...(process.env.DYNAMODB_ENDPOINT && {
+    endpoint: process.env.DYNAMODB_ENDPOINT,
+  }),
+});
+
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.DYNAMODB_TABLE_SEATS || 'AeroLink-Seats-dev';
+const TABLE_NAME = process.env.SEATS_TABLE || process.env.DYNAMODB_TABLE_SEATS || 'AeroLink-Seats-dev';
 
 class Seat {
   /**
@@ -57,13 +65,13 @@ class Seat {
   static async findByFlight(flightId) {
     const params = {
       TableName: TABLE_NAME,
-      KeyConditionExpression: 'flightId = :flightId',
+      FilterExpression: 'flightId = :flightId',
       ExpressionAttributeValues: {
         ':flightId': flightId
       }
     };
 
-    const result = await dynamoDB.query(params).promise();
+    const result = await dynamoDB.scan(params).promise();
     return result.Items;
   }
 
@@ -77,7 +85,6 @@ class Seat {
     const params = {
       TableName: TABLE_NAME,
       Key: {
-        flightId,
         seatId
       },
       UpdateExpression: 'SET #status = :status',

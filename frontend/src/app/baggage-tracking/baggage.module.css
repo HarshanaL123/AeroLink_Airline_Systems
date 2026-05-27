@@ -1,0 +1,261 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 4rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.searchPanel {
+  padding: 2rem;
+  margin-bottom: 3rem;
+}
+
+.searchForm {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.inputGroup label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.input {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 1rem;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.searchButton {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  height: 54px;
+  box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+}
+
+.searchButton:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+.searchButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.errorBanner {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.noResults {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+}
+
+.resultsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.baggageCard {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.baggageHeader {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1.5rem;
+}
+
+.bagInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Timeline Components */
+.timelineWrapper {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.timelineStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  z-index: 2;
+}
+
+.stepCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  background-color: var(--bg-primary);
+  border: 2px solid var(--glass-border);
+  color: var(--text-secondary);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+.stepText {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.stepLine {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 4px;
+  background-color: var(--glass-border);
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+/* Status Variations */
+.completed .stepCircle {
+  background-color: rgba(16, 185, 129, 0.15);
+  border-color: #34d399;
+  color: #34d399;
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+}
+
+.completed .stepLine {
+  background-color: #34d399;
+}
+
+.completed .stepText {
+  color: var(--text-primary);
+}
+
+.active .stepCircle {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: scale(1.1);
+}
+
+.active .stepText {
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .searchForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .baggageHeader {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .timelineWrapper {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .timelineStep {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  
+  .stepLine {
+    top: 100%;
+    left: 20px;
+    width: 4px;
+    height: 2rem;
+    transform: translateX(-50%);
+  }
+  
+  .stepText {
+    margin-top: 0;
+  }
+}

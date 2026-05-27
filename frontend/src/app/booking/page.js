@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { flightAPI, bookingAPI } from '@/services/api';
+import { io } from 'socket.io-client';
 import styles from './booking.module.css';
 
 function BookingFlow() {
@@ -13,13 +14,14 @@ function BookingFlow() {
   const [flight, setFlight] = useState(null);
   const [seats, setSeats] = useState([]);
   const [selectedSeat, setSelectedSeat] = useState('');
-  const [paymentToken, setPaymentToken] = useState('tok_visa_simulated'); // Simulated PCI-DSS token
+  const [paymentToken, setPaymentToken] = useState('tok_visa_simulated'); 
   
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [bookingDetails, setBookingDetails] = useState(null);
+  const [wsStatus, setWsStatus] = useState('Connecting...');
 
   useEffect(() => {
     if (!flightId) {
@@ -36,11 +38,12 @@ function BookingFlow() {
 
         if (flightRes.success && seatsRes.success) {
           setFlight(flightRes.data);
-          // Only allow booking of AVAILABLE seats
-          setSeats(seatsRes.data.filter(s => s.status === 'AVAILABLE'));
+          // Sort seats so they map cleanly to a grid (e.g. 1A, 1B, 1C...)
+          const sortedSeats = seatsRes.data.sort((a, b) => a.seatId.localeCompare(b.seatId));
+          setSeats(sortedSeats);
         }
       } catch (err) {
-        setError('Failed to load flight details or you are unauthorized. Please login first.');
+        setError('Failed to load flight details or unauthorized.');
       } finally {
         setIsLoading(false);
       }
@@ -49,10 +52,41 @@ function BookingFlow() {
     fetchDetails();
   }, [flightId, router]);
 
+  // Real-time WebSocket logic for Seat Map
+  useEffect(() => {
+    if (!flightId) return;
+
+    const socketUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3002';
+    const socket = io(socketUrl);
+
+    socket.on('connect', () => setWsStatus('Live Updates Active'));
+    socket.on('disconnect', () => setWsStatus('Live Updates Paused'));
+
+    socket.on('seat.updated', (updatedSeat) => {
+      if (updatedSeat.flightId === flightId) {
+        setSeats((prevSeats) => 
+          prevSeats.map(seat => {
+            if (seat.seatId === updatedSeat.seatId) {
+              // If the seat we currently selected was just booked by someone else, deselect it!
+              if (selectedSeat === updatedSeat.seatId && updatedSeat.status !== 'AVAILABLE') {
+                setSelectedSeat('');
+                setError(`Alert: Seat ${updatedSeat.seatId} was just booked by another user!`);
+              }
+              return { ...seat, status: updatedSeat.status };
+            }
+            return seat;
+          })
+        );
+      }
+    });
+
+    return () => socket.disconnect();
+  }, [flightId, selectedSeat]);
+
   const handleBooking = async (e) => {
     e.preventDefault();
     if (!selectedSeat) {
-      setError('Please select a seat.');
+      setError('Please select an available seat from the map.');
       return;
     }
 
@@ -120,8 +154,8 @@ function BookingFlow() {
   return (
     <div className={styles.container}>
       <div className={`glass-panel animate-fade-in ${styles.checkoutCard}`}>
-        <h1 className={styles.title}>Secure Checkout</h1>
-        <p className={styles.subtitle}>Complete your booking for {flight?.flightNumber}</p>
+        <h1 className={styles.title}>Interactive Seat Selection</h1>
+        <p className={styles.subtitle}>Flight {flight?.flightNumber} | {wsStatus}</p>
 
         {error && <div className={styles.errorBanner}>{error}</div>}
 
@@ -136,25 +170,42 @@ function BookingFlow() {
           </div>
         </div>
 
-        <form onSubmit={handleBooking} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="seat">Select Available Seat</label>
-            <select 
-              id="seat" 
-              value={selectedSeat} 
-              onChange={(e) => setSelectedSeat(e.target.value)}
-              className={styles.input}
-              required
-            >
-              <option value="" disabled>-- Choose a Seat --</option>
-              {seats.map(seat => (
-                <option key={seat.seatId} value={seat.seatId}>
-                  Seat {seat.seatId} (Available)
-                </option>
-              ))}
-            </select>
+        {/* 2D Interactive Seat Map */}
+        <div className={styles.seatMapContainer}>
+          <div className={styles.seatMapLegend}>
+            <div className={styles.legendItem}><div className={`${styles.legendBox} ${styles.seatAvailable}`}></div> Available</div>
+            <div className={styles.legendItem}><div className={`${styles.legendBox} ${styles.seatSelected}`}></div> Selected</div>
+            <div className={styles.legendItem}><div className={`${styles.legendBox} ${styles.seatBooked}`}></div> Booked</div>
           </div>
+          
+          <div className={styles.airplaneFuselage}>
+            <div className={styles.cockpit}></div>
+            <div className={styles.seatGrid}>
+              {seats.map((seat) => {
+                const isAvailable = seat.status === 'AVAILABLE';
+                const isSelected = selectedSeat === seat.seatId;
+                
+                return (
+                  <button
+                    key={seat.seatId}
+                    type="button"
+                    disabled={!isAvailable}
+                    onClick={() => setSelectedSeat(seat.seatId)}
+                    className={`${styles.seatButton} ${
+                      isSelected ? styles.seatSelected : 
+                      isAvailable ? styles.seatAvailable : styles.seatBooked
+                    }`}
+                    title={isAvailable ? `Select Seat ${seat.seatId}` : `Seat ${seat.seatId} is taken`}
+                  >
+                    {seat.seatId}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
+        <form onSubmit={handleBooking} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="card">Payment Details (Simulated PCI-DSS)</label>
             <input 
@@ -172,7 +223,7 @@ function BookingFlow() {
             className={styles.submitButton}
             disabled={isProcessing || !selectedSeat}
           >
-            {isProcessing ? 'Processing Payment (Saga)...' : `Pay $${flight?.price} & Confirm`}
+            {isProcessing ? 'Processing Payment (Saga)...' : selectedSeat ? `Pay $${flight?.price} & Confirm ${selectedSeat}` : 'Select a seat to proceed'}
           </button>
         </form>
       </div>

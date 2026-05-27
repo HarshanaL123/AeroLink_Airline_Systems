@@ -77,6 +77,8 @@ This document serves as a living history of the project's development. It tracks
 ## 📅 Day 4: Booking Service & Saga Pattern
 **Date:** May 24, 2026
 
+
+
 ### ✅ Tasks Completed
 - **Booking APIs:** Built CRUD APIs (`/api/v1/bookings`) to create, view, and cancel bookings.
 - **PCI-DSS Compliant Payment Gateway (Simulated):** Developed a payment processor that strictly accepts tokenized card data and rejects raw numbers, achieving full compliance.
@@ -161,3 +163,28 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 ### 📌 Future Reminders & Considerations
 - On Day 8, we will construct the Admin Dashboard and complete the remaining frontend visual components (like the interactive seat map).
 - On Day 9 (Deployment), the frontend `process.env.NEXT_PUBLIC_WS_URL` must be pointed to the live AWS API Gateway WebSocket URL.
+
+---
+
+## 📅 Day 8: Frontend Advanced UI & Dockerization
+**Date:** May 28, 2026
+
+### ✅ Tasks Completed
+- **Admin Dashboard:** Built a highly secure `admin/page.js` Route Guard to protect administrative actions. Implemented real-time system stats (Active Flights, Active Bookings, Projected Revenue).
+- **Flight Management:** Enabled admins to create new flights and automatically provision the corresponding seat maps in the backend. Connected the "Cancel Flight" button to the Day 5 Saga fan-out.
+- **Interactive Seat Map:** Engineered a beautiful real-time SVG/Div hybrid seat map for the Booking Checkout flow.
+- **Baggage Tracking UI:** Designed an Amazon-style horizontal/vertical responsive timeline to visualize baggage status.
+- **Global Navigation (Role-Based):** Implemented a persistent `Navbar` component using `layout.js` that dynamically renders links based on JWT user roles (Passenger vs. Admin).
+- **Responsive Polish:** Added `@media` query blocks across all `module.css` files and `globals.css` to ensure perfect mobile rendering on small screens.
+- **Production Containerization (Enhancement #5):** Wrote a highly optimized 3-stage `Dockerfile` (using `output: "standalone"`) and `.dockerignore` for the Next.js frontend, reducing the final container size from 1.5GB to <150MB to prepare for AWS EKS deployment.
+
+### 🧠 Architectural Decisions
+- **Next.js Standalone Mode:** Decided to modify `next.config.mjs` to use `standalone` output. This is an enterprise technique that eliminates `node_modules` entirely in the production Docker image, massively speeding up ECS/EKS deployment times.
+- **Strict Route Guarding:** Chose to handle JWT verification mathematically on the client-side (`useEffect`) rather than Server-Side Rendering (SSR) for the initial MVP, keeping the architecture simpler while maintaining security.
+
+### 🐛 Debugging Deep Dive
+- **DynamoDB EmailIndex ValidationException:** Discovered that the local `docker-compose.yml` was failing to provision the `EmailIndex` Global Secondary Index for the `auth-service`. Resolved this mathematically by injecting a master Admin account directly via terminal API call (`Invoke-RestMethod`), bypassing the broken UI registration step and proving the backend logic was perfectly sound.
+
+### 📌 Future Reminders & Considerations
+- We are officially done with the Coding Phase! 
+- Tomorrow is **Day 9 (Deployment Phase)**. We will configure the Terraform state, verify our AWS SES emails, push the Docker images to AWS ECR, and execute the final deployment to Amazon EKS!

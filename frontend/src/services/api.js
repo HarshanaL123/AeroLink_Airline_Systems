@@ -77,6 +77,16 @@ export const flightAPI = {
   getSeats: async (id) => {
     const response = await api.get(`${flightAPI.baseURL}/${id}/seats`);
     return response.data;
+  },
+
+  createFlight: async (flightData) => {
+    const response = await api.post(`${flightAPI.baseURL}`, flightData);
+    return response.data;
+  },
+
+  deleteFlight: async (id) => {
+    const response = await api.delete(`${flightAPI.baseURL}/${id}`);
+    return response.data;
   }
 };
 
@@ -86,6 +96,20 @@ export const bookingAPI = {
   createBooking: async (bookingData) => {
     // bookingData requires: flightId, seatId, price, paymentToken
     const response = await api.post(`${bookingAPI.baseURL}`, bookingData);
+    return response.data;
+  }
+};
+
+export const baggageAPI = {
+  baseURL: process.env.NEXT_PUBLIC_BAGGAGE_SERVICE_URL || 'http://localhost:3004/api/v1/baggage',
+  
+  getBaggageByBooking: async (bookingId) => {
+    const response = await api.get(`${baggageAPI.baseURL}/booking/${bookingId}`);
+    return response.data;
+  },
+  
+  getBaggageById: async (baggageId) => {
+    const response = await api.get(`${baggageAPI.baseURL}/${baggageId}`);
     return response.data;
   }
 };

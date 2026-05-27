@@ -26,13 +26,13 @@ export default function LoginPage() {
       if (response.success && response.token) {
         // Securely store JWT and user data
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.setItem('user', JSON.stringify(response.data));
         
         // RBAC Routing: Redirect based on role
-        if (response.user.role === 'ADMIN' || response.user.role === 'STAFF') {
+        if (response.data.role.toLowerCase() === 'admin' || response.data.role.toLowerCase() === 'staff') {
           router.push('/admin');
         } else {
-          router.push('/dashboard');
+          router.push('/flights');
         }
       }
     } catch (err) {

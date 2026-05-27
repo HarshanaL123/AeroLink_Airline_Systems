@@ -9,7 +9,7 @@ AWS.config.update({
 });
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.DYNAMODB_TABLE_FLIGHTS || 'AeroLink-Flights-dev';
+const TABLE_NAME = process.env.FLIGHTS_TABLE || process.env.DYNAMODB_TABLE_FLIGHTS || 'AeroLink-Flights-dev';
 
 class Flight {
   /**
@@ -104,29 +104,7 @@ class Flight {
    * Search flights by route, date, and price range
    */
   static async search({ departureAirport, arrivalAirport, date, minPrice, maxPrice }) {
-    if (departureAirport && arrivalAirport && date) {
-      // Use the optimized RouteDateIndex
-      const routeDate = `${departureAirport}-${arrivalAirport}#${date}`;
-      const params = {
-        TableName: TABLE_NAME,
-        IndexName: 'RouteDateIndex',
-        KeyConditionExpression: 'routeDate = :routeDate',
-        ExpressionAttributeValues: {
-          ':routeDate': routeDate,
-        },
-      };
-
-      const result = await dynamoDB.query(params).promise();
-      let flights = result.Items;
-
-      // In-memory price filter (for simplicity in local DynamoDB)
-      if (minPrice) flights = flights.filter(f => f.price >= parseFloat(minPrice));
-      if (maxPrice) flights = flights.filter(f => f.price <= parseFloat(maxPrice));
-
-      return flights;
-    } else {
-      // Fallback to scan with filters if specific index isn't used
-      // (Not recommended for prod, but okay for dev)
+      // Fallback to scan with filters since docker-compose did not create the GSI
       let filterExp = [];
       let expValues = {};
 
@@ -146,7 +124,6 @@ class Flight {
 
       const result = await dynamoDB.scan(params).promise();
       return result.Items;
-    }
   }
 }
 
