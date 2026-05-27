@@ -1,0 +1,93 @@
+import axios from 'axios';
+
+// Create a generic Axios instance
+const api = axios.create({
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request Interceptor: Automatically attach JWT token to every request
+api.interceptors.request.use(
+  (config) => {
+    // We must check if window is defined because Next.js does SSR
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Handle global errors (like 401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token and redirect to login if unauthorized
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Service-specific API endpoints
+export const authAPI = {
+  // Using absolute URLs to connect to the specific microservice ports locally
+  // On Day 9, we will change these base URLs to point to the AWS API Gateway
+  baseURL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3001/api/v1/auth',
+  
+  register: async (userData) => {
+    const response = await api.post(`${authAPI.baseURL}/register`, userData);
+    return response.data;
+  },
+  
+  login: async (credentials) => {
+    const response = await api.post(`${authAPI.baseURL}/login`, credentials);
+    return response.data;
+  }
+};
+
+export const flightAPI = {
+  baseURL: process.env.NEXT_PUBLIC_FLIGHT_SERVICE_URL || 'http://localhost:3002/api/v1/flights',
+  
+  searchFlights: async (params) => {
+    // params can include: departureAirport, arrivalAirport, date, minPrice, maxPrice
+    const response = await api.get(`${flightAPI.baseURL}/search`, { params });
+    return response.data;
+  },
+  
+  getFlights: async () => {
+    const response = await api.get(`${flightAPI.baseURL}`);
+    return response.data;
+  },
+  
+  getFlight: async (id) => {
+    const response = await api.get(`${flightAPI.baseURL}/${id}`);
+    return response.data;
+  },
+  
+  getSeats: async (id) => {
+    const response = await api.get(`${flightAPI.baseURL}/${id}/seats`);
+    return response.data;
+  }
+};
+
+export const bookingAPI = {
+  baseURL: process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL || 'http://localhost:3003/api/v1/bookings',
+  
+  createBooking: async (bookingData) => {
+    // bookingData requires: flightId, seatId, price, paymentToken
+    const response = await api.post(`${bookingAPI.baseURL}`, bookingData);
+    return response.data;
+  }
+};
+
+export default api;

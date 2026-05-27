@@ -130,3 +130,34 @@ This document serves as a living history of the project's development. It tracks
 ### 📌 Future Reminders & Considerations
 - On Day 7, we shift to the **Frontend Phase**. The React/Next.js application must be built to correctly consume the JWT tokens, REST APIs, and eventually the WebSocket connections we architected today.
 - When we reach Day 9, ensure the `apigateway_websocket` Terraform module is explicitly applied so the real-time UI features function during the University Viva presentation.
+
+---
+
+## 🛠️ Pre-Day 7: Frontend Development Preparation
+**Date:** May 27, 2026
+
+Before launching the Next.js frontend, two critical backend adjustments were made to ensure seamless local development:
+1. **CORS Verification:** Verified that `cors` middleware was successfully active across all microservices to prevent cross-origin blocks from the `localhost:3000` frontend.
+2. **Local WebSocket Mocking:** Installed `socket.io` into the `flight-service` to act as a local WebSocket server. This allows the frontend to develop and test real-time "Live Flight Board" UI updates locally today. *Note: As documented in the Day 9 plan, this local mock will be seamlessly swapped to the production AWS API Gateway WebSocket URL during deployment.*
+
+---
+
+## 📅 Day 7: Frontend Core Pages
+**Date:** May 27, 2026
+
+### ✅ Tasks Completed
+- **Next.js Initialization:** Generated the `frontend/` workspace using the Next.js 16 App Router. Strictly adhered to project guidelines by rejecting TailwindCSS in favor of a highly scalable pure Vanilla CSS modular architecture.
+- **Glassmorphism Design System:** Developed a breathtaking, premium user interface relying on modern CSS variables, `backdrop-filter` effects, and micro-animations to deliver a modern cloud-app feel.
+- **Secure API Service Layer:** Built the `api.js` Axios wrapper. Engineered automatic JWT token injection via request interceptors and centralized 401 Unauthorized handling.
+- **Authentication Flow:** Built the Login and Registration components incorporating Role-Based Access Control (RBAC) routing logic.
+- **Flight Search Engine:** Constructed a dynamic, parameter-cleaning search interface that maps API responses into stunning animated flight cards.
+- **Real-Time Live Board:** Integrated `socket.io-client` to ingest WebSocket events (`seat.updated`, `flight.updated`) from the local mock server, enabling zero-refresh data synchronization for the user.
+- **Saga-Driven Booking Checkout:** Engineered the Secure Checkout page. Implemented PCI-DSS simulated payment tokens, live seat-availability dropdowns, and successfully connected the React UI to the robust Backend Saga Pattern for atomic booking execution.
+
+### 🧠 Architectural Decisions
+- **Vanilla CSS Over Tailwind:** While Tailwind is popular, relying on standard CSS Modules mathematically reduces class-name spaghetti and makes the components easier to maintain, review, and enhance later if the design needs to shift.
+- **Decoupled API Logic:** By abstracting all backend calls into the `services/api.js` wrapper, the React components remain exceptionally clean, only handling UI state rather than complex networking logic.
+
+### 📌 Future Reminders & Considerations
+- On Day 8, we will construct the Admin Dashboard and complete the remaining frontend visual components (like the interactive seat map).
+- On Day 9 (Deployment), the frontend `process.env.NEXT_PUBLIC_WS_URL` must be pointed to the live AWS API Gateway WebSocket URL.

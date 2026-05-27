@@ -4,9 +4,28 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// Local WebSocket Server (Mocking AWS API Gateway WebSockets for Day 7 Frontend Development)
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+  }
+});
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log(`🔌 [WebSocket] Client connected: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`🔌 [WebSocket] Client disconnected: ${socket.id}`);
+  });
+});
 
 // Middleware
 app.use(helmet());
@@ -52,9 +71,10 @@ app.use((err, req, res, next) => {
 
 // Start Server
 if (require.main === module) {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`✈️  Flight Service running on port ${PORT}`);
     console.log(`📡 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔌 Local WebSocket Server running on ws://localhost:${PORT}`);
   });
 }
 

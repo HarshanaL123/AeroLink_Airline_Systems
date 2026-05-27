@@ -155,6 +155,13 @@ exports.updateSeat = async (req, res, next) => {
     // Publish event so Booking Service knows the seat is no longer available
     await publishEvent('aerolink.flight', 'seat.updated', updatedSeat);
     
+    // Local WebSocket Push for Real-Time Frontend Updates (Day 7)
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('seat.updated', updatedSeat);
+      console.log(`📡 [WebSocket] Emitted seat.updated for ${req.params.seatId} to ${status}`);
+    }
+
     res.status(200).json({ success: true, data: updatedSeat });
   } catch (error) {
     console.error('[UPDATE SEAT ERROR]', error);
