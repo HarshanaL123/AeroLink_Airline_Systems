@@ -80,7 +80,7 @@ describe('Flight API Endpoints', () => {
   });
 
   describe('GET /api/v1/flights/search', () => {
-    it('should search flights using GSI', async () => {
+    it('should search flights using scan (local fallback)', async () => {
       ddbMock.promise.mockResolvedValueOnce({
         Items: [{ flightId: 'f1', price: 400 }]
       });
@@ -90,7 +90,7 @@ describe('Flight API Endpoints', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.count).toBe(1);
-      expect(ddbMock.query).toHaveBeenCalled();
+      expect(ddbMock.scan).toHaveBeenCalled();
     });
   });
 

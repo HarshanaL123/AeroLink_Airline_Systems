@@ -65,13 +65,13 @@ class Seat {
   static async findByFlight(flightId) {
     const params = {
       TableName: TABLE_NAME,
-      FilterExpression: 'flightId = :flightId',
+      KeyConditionExpression: 'flightId = :flightId',
       ExpressionAttributeValues: {
         ':flightId': flightId
       }
     };
 
-    const result = await dynamoDB.scan(params).promise();
+    const result = await dynamoDB.query(params).promise();
     return result.Items;
   }
 
@@ -85,6 +85,7 @@ class Seat {
     const params = {
       TableName: TABLE_NAME,
       Key: {
+        flightId,
         seatId
       },
       UpdateExpression: 'SET #status = :status',
