@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [flights, setFlights] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedFlightId, setExpandedFlightId] = useState(null);
 
   // New Flight Form State
   const [formData, setFormData] = useState({
@@ -56,7 +57,14 @@ export default function AdminDashboard() {
   };
 
   const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+    
+    // Strict enforcement: Only allow up to 3 uppercase letters for airport codes
+    if (name === 'departureAirport' || name === 'arrivalAirport') {
+      value = value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+    }
+    
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleCreateFlight = async (e) => {
@@ -86,6 +94,24 @@ export default function AdminDashboard() {
       fetchData(); // Refresh the grid
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to cancel flight');
+    }
+  };
+
+  const handleDelayFlight = async (flightId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'DELAYED' ? 'SCHEDULED' : 'DELAYED';
+      await flightAPI.updateFlight(flightId, { status: newStatus });
+      fetchData(); // Refresh the grid
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update flight delay status');
+    }
+  };
+
+  const toggleDetails = (flightId) => {
+    if (expandedFlightId === flightId) {
+      setExpandedFlightId(null);
+    } else {
+      setExpandedFlightId(flightId);
     }
   };
 
@@ -132,11 +158,11 @@ export default function AdminDashboard() {
             <div className={styles.row}>
               <div className={styles.inputGroup}>
                 <label>Departure Airport</label>
-                <input name="departureAirport" value={formData.departureAirport} onChange={handleInputChange} className={styles.input} required placeholder="JFK" />
+                <input name="departureAirport" value={formData.departureAirport} onChange={handleInputChange} className={styles.input} required placeholder="JFK" maxLength="3" pattern="[A-Z]{3}" title="Must be exactly 3 uppercase letters" />
               </div>
               <div className={styles.inputGroup}>
                 <label>Arrival Airport</label>
-                <input name="arrivalAirport" value={formData.arrivalAirport} onChange={handleInputChange} className={styles.input} required placeholder="LAX" />
+                <input name="arrivalAirport" value={formData.arrivalAirport} onChange={handleInputChange} className={styles.input} required placeholder="LAX" maxLength="3" pattern="[A-Z]{3}" title="Must be exactly 3 uppercase letters" />
               </div>
             </div>
 
@@ -176,19 +202,64 @@ export default function AdminDashboard() {
           ) : (
             <div className={styles.flightList}>
               {flights.map(flight => (
-                <div key={flight.flightId} className={styles.flightItem}>
-                  <div className={styles.flightInfo}>
-                    <strong>{flight.flightNumber}</strong>
-                    <span>{flight.departureAirport} ✈️ {flight.arrivalAirport}</span>
-                    <span className={styles.seatsBadge}>{flight.availableSeats} / {flight.totalSeats} Seats Open</span>
+                <div key={flight.flightId} className={styles.flightItemContainer} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                  <div className={styles.flightItem} style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: 0 }}>
+                    <div className={styles.flightInfo}>
+                      <strong>{flight.flightNumber}</strong>
+                      <span>{flight.departureAirport} ✈️ {flight.arrivalAirport}</span>
+                      <span className={styles.seatsBadge} style={{ backgroundColor: flight.status === 'DELAYED' ? '#f39c12' : flight.status === 'CANCELLED' ? '#e74c3c' : 'rgba(52, 152, 219, 0.2)' }}>
+                        {flight.status} | {flight.availableSeats} / {flight.totalSeats} Seats Open
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        onClick={() => toggleDetails(flight.flightId)} 
+                        className={styles.submitButton}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', minWidth: 'auto' }}
+                      >
+                        {expandedFlightId === flight.flightId ? 'Hide' : 'View'}
+                      </button>
+                      <button 
+                        onClick={() => handleDelayFlight(flight.flightId, flight.status)} 
+                        className={styles.submitButton}
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', minWidth: 'auto', backgroundColor: flight.status === 'DELAYED' ? '#27ae60' : '#f39c12' }}
+                        disabled={flight.status === 'CANCELLED'}
+                      >
+                        {flight.status === 'DELAYED' ? 'Resume' : 'Delay'}
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteFlight(flight.flightId)} 
+                        className={styles.deleteButton}
+                        title="Triggers EventBridge Cancellation Saga"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => handleDeleteFlight(flight.flightId)} 
-                    className={styles.deleteButton}
-                    title="Triggers EventBridge Cancellation Saga"
-                  >
-                    Cancel Flight
-                  </button>
+                  
+                  {/* Expandable Details Section */}
+                  {expandedFlightId === flight.flightId && (
+                    <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '8px', fontSize: '0.9rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Departure</p>
+                          <p><strong>{new Date(flight.departureDate).toLocaleString()}</strong></p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Arrival</p>
+                          <p><strong>{new Date(flight.arrivalDate).toLocaleString()}</strong></p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Price</p>
+                          <p><strong>${flight.price}</strong></p>
+                        </div>
+                        <div>
+                          <p style={{ color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Internal Flight ID</p>
+                          <p style={{ fontSize: '0.7rem', wordBreak: 'break-all' }}>{flight.flightId}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
               {flights.length === 0 && <p className={styles.noData}>No active flights in the database.</p>}

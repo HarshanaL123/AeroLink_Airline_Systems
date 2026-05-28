@@ -1,5 +1,5 @@
 .container {
-  padding: 4rem 2rem;
+  padding: 6rem 2rem 4rem 2rem; /* Increased top padding to clear fixed navbar */
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
@@ -173,8 +173,9 @@
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
   align-items: center;
   transition: var(--transition);
 }

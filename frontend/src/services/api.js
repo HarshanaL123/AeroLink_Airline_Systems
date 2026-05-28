@@ -84,6 +84,11 @@ export const flightAPI = {
     return response.data;
   },
 
+  updateFlight: async (id, flightData) => {
+    const response = await api.put(`${flightAPI.baseURL}/${id}`, flightData);
+    return response.data;
+  },
+
   deleteFlight: async (id) => {
     const response = await api.delete(`${flightAPI.baseURL}/${id}`);
     return response.data;
@@ -96,6 +101,16 @@ export const bookingAPI = {
   createBooking: async (bookingData) => {
     // bookingData requires: flightId, seatId, price, paymentToken
     const response = await api.post(`${bookingAPI.baseURL}`, bookingData);
+    return response.data;
+  },
+
+  getUserBookings: async (userId) => {
+    const response = await api.get(`${bookingAPI.baseURL}/user/${userId}`);
+    return response.data;
+  },
+
+  cancelBooking: async (bookingId) => {
+    const response = await api.put(`${bookingAPI.baseURL}/${bookingId}/cancel`);
     return response.data;
   }
 };
@@ -110,6 +125,11 @@ export const baggageAPI = {
   
   getBaggageById: async (baggageId) => {
     const response = await api.get(`${baggageAPI.baseURL}/${baggageId}`);
+    return response.data;
+  },
+
+  registerBaggage: async (baggageData) => {
+    const response = await api.post(`${baggageAPI.baseURL}`, baggageData);
     return response.data;
   }
 };

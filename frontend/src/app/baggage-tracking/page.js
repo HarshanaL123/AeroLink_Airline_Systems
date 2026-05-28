@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { baggageAPI } from '@/services/api';
 import styles from './baggage.module.css';
 
@@ -12,26 +13,61 @@ export default function BaggageTrackingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const searchParams = useSearchParams();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!bookingId.trim()) return;
+  useEffect(() => {
+    const queryBookingId = searchParams.get('bookingId');
+    if (queryBookingId) {
+      setBookingId(queryBookingId);
+      // Auto-trigger search for this booking ID
+      autoSearch(queryBookingId);
+    }
+  }, [searchParams]);
 
+  // LIVE TRACKING: Poll the server every 5 seconds for real-time updates
+  useEffect(() => {
+    if (!bookingId) return;
+    
+    const intervalId = setInterval(() => {
+      silentSearch(bookingId);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [bookingId]);
+
+  const silentSearch = async (id) => {
+    try {
+      const response = await baggageAPI.getBaggageByBooking(id.trim());
+      if (response.success) {
+        setBaggageList(response.data);
+      }
+    } catch (err) {
+      // Ignore errors during silent background polling
+    }
+  };
+
+  const autoSearch = async (id) => {
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
     setBaggageList([]);
 
     try {
-      const response = await baggageAPI.getBaggageByBooking(bookingId.trim());
+      const response = await baggageAPI.getBaggageByBooking(id.trim());
       if (response.success) {
         setBaggageList(response.data);
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to find baggage records. Check your Booking ID and ensure you are logged in.');
+      setError(err.response?.data?.error || 'Failed to find baggage records.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!bookingId.trim()) return;
+    autoSearch(bookingId);
   };
 
   const getStepStatus = (currentStatus, stepStatus) => {
@@ -78,7 +114,43 @@ export default function BaggageTrackingPage() {
         {error && <div className={styles.errorBanner}>{error}</div>}
         
         {hasSearched && !isLoading && baggageList.length === 0 && !error && (
-          <div className={styles.noResults}>No baggage found for this Booking ID.</div>
+          <div className={`glass-panel animate-fade-in ${styles.baggageCard}`}>
+            <div className={styles.baggageHeader}>
+              <div className={styles.bagInfo}>
+                <span className={styles.label}>Bag Tag ID</span>
+                <span className={styles.value}>PENDING...</span>
+              </div>
+              <div className={styles.bagInfo}>
+                <span className={styles.label}>Booking Ref</span>
+                <span className={styles.value}>{bookingId.substring(0, 8)}...</span>
+              </div>
+              <div className={styles.bagInfo}>
+                <span className={styles.label}>Status</span>
+                <span className={styles.value} style={{ color: '#ffa502' }}>Awaiting Drop-off</span>
+              </div>
+            </div>
+
+            <div className={styles.timelineWrapper}>
+              {TIMELINE_STATES.map((state, i) => {
+                // For a pending bag, none of the standard states are completed yet
+                const stepClass = styles.pending;
+                return (
+                  <div key={state} className={`${styles.timelineStep} ${stepClass}`}>
+                    <div className={styles.stepCircle}>
+                      {i + 1}
+                    </div>
+                    <div className={styles.stepText}>
+                      {formatStatusText(state)}
+                    </div>
+                    {i < TIMELINE_STATES.length - 1 && <div className={styles.stepLine}></div>}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Your digital baggage tracker is ready! Please hand your physical luggage to the AeroLink staff at the airport check-in counter to begin live tracking.
+            </div>
+          </div>
         )}
 
         {baggageList.map((bag, index) => (

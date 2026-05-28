@@ -90,6 +90,26 @@ class Flight {
   }
 
   /**
+   * Atomically increment or decrement availableSeats
+   * @param {string} flightId 
+   * @param {number} amount (+1 or -1)
+   */
+  static async updateAvailableSeats(flightId, amount) {
+    const params = {
+      TableName: TABLE_NAME,
+      Key: { flightId },
+      UpdateExpression: 'ADD availableSeats :val',
+      ExpressionAttributeValues: {
+        ':val': amount
+      },
+      ReturnValues: 'UPDATED_NEW'
+    };
+
+    const result = await dynamoDB.update(params).promise();
+    return result.Attributes;
+  }
+
+  /**
    * Find all flights (Note: scanning is expensive in prod, but fine for small catalogs/dev)
    */
   static async findAll() {

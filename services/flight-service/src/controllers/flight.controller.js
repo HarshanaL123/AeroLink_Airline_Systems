@@ -16,10 +16,10 @@ exports.createFlight = async (req, res, next) => {
 
     const flightData = {
       flightId: uuidv4(),
-      flightNumber,
-      departureAirport,
-      arrivalAirport,
-      routeDate: `${departureAirport}-${arrivalAirport}#${departureDate.split('T')[0]}`,
+      flightNumber: flightNumber.toUpperCase(),
+      departureAirport: departureAirport.toUpperCase(),
+      arrivalAirport: arrivalAirport.toUpperCase(),
+      routeDate: `${departureAirport.toUpperCase()}-${arrivalAirport.toUpperCase()}#${departureDate.split('T')[0]}`,
       departureDate,
       arrivalDate,
       price: parseFloat(price),
@@ -49,7 +49,11 @@ exports.createFlight = async (req, res, next) => {
 // @access  Public
 exports.searchFlights = async (req, res, next) => {
   try {
-    const { departureAirport, arrivalAirport, date, minPrice, maxPrice } = req.query;
+    let { departureAirport, arrivalAirport, date, minPrice, maxPrice } = req.query;
+    
+    if (departureAirport) departureAirport = departureAirport.toUpperCase();
+    if (arrivalAirport) arrivalAirport = arrivalAirport.toUpperCase();
+
     const flights = await Flight.search({ departureAirport, arrivalAirport, date, minPrice, maxPrice });
     res.status(200).json({ success: true, count: flights.length, data: flights });
   } catch (error) {
@@ -152,6 +156,14 @@ exports.updateSeat = async (req, res, next) => {
 
     const updatedSeat = await Seat.updateSeatStatus(req.params.id, req.params.seatId, status);
     
+    // Atomically update available seats on the Flight model
+    // We only decrement on RESERVED to avoid double-decrementing when it transitions to BOOKED later in the Saga.
+    if (status === 'RESERVED') {
+      await Flight.updateAvailableSeats(req.params.id, -1);
+    } else if (status === 'AVAILABLE') {
+      await Flight.updateAvailableSeats(req.params.id, 1);
+    }
+
     // Publish event so Booking Service knows the seat is no longer available
     await publishEvent('aerolink.flight', 'seat.updated', updatedSeat);
     

@@ -18,7 +18,14 @@ export default function FlightSearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearchChange = (e) => {
-    setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+    
+    // Strict enforcement: Only allow up to 3 uppercase letters for airport codes
+    if (name === 'departureAirport' || name === 'arrivalAirport') {
+      value = value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+    }
+    
+    setSearchParams({ ...searchParams, [name]: value });
   };
 
   const executeSearch = async (e) => {
@@ -32,6 +39,14 @@ export default function FlightSearchPage() {
       const cleanParams = Object.fromEntries(
         Object.entries(searchParams).filter(([_, v]) => v !== '')
       );
+      
+      // Polish: Ensure airport codes are strictly uppercase to match backend DynamoDB exactly
+      if (cleanParams.departureAirport) {
+        cleanParams.departureAirport = cleanParams.departureAirport.toUpperCase();
+      }
+      if (cleanParams.arrivalAirport) {
+        cleanParams.arrivalAirport = cleanParams.arrivalAirport.toUpperCase();
+      }
       
       const response = await flightAPI.searchFlights(cleanParams);
       if (response.success) {

@@ -58,6 +58,9 @@ export default function Navbar() {
             {/* Passenger Specific Links */}
             {user.role.toLowerCase() === 'passenger' && (
               <>
+                <Link href="/dashboard" className={pathname === '/dashboard' ? styles.active : ''}>
+                  My Dashboard
+                </Link>
                 <Link href="/flights" className={pathname === '/flights' ? styles.active : ''}>
                   Search Flights
                 </Link>

@@ -68,7 +68,9 @@ function BookingFlow() {
           prevSeats.map(seat => {
             if (seat.seatId === updatedSeat.seatId) {
               // If the seat we currently selected was just booked by someone else, deselect it!
-              if (selectedSeat === updatedSeat.seatId && updatedSeat.status !== 'AVAILABLE') {
+              // If the seat we currently selected was just booked by someone else, deselect it!
+              // POLISH: Suppress this error if OUR OWN payment is currently processing!
+              if (selectedSeat === updatedSeat.seatId && updatedSeat.status !== 'AVAILABLE' && !isProcessing) {
                 setSelectedSeat('');
                 setError(`Alert: Seat ${updatedSeat.seatId} was just booked by another user!`);
               }
@@ -81,7 +83,7 @@ function BookingFlow() {
     });
 
     return () => socket.disconnect();
-  }, [flightId, selectedSeat]);
+  }, [flightId, selectedSeat, isProcessing]);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -122,7 +124,7 @@ function BookingFlow() {
         <div className={`glass-panel animate-fade-in ${styles.successCard}`}>
           <div className={styles.successIcon}>✓</div>
           <h1 className={styles.title}>Booking Confirmed!</h1>
-          <p className={styles.subtitle}>Your seat has been reserved via the Saga Pattern.</p>
+          <p className={styles.subtitle}>Your seat has been reserved.</p>
           
           <div className={styles.receipt}>
             <div className={styles.receiptRow}>
