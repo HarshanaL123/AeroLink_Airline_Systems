@@ -6,6 +6,13 @@ const BookingModel = require('../src/models/booking.model');
 // Mock dependencies
 jest.mock('../src/services/saga.service');
 jest.mock('../src/models/booking.model');
+jest.mock('../src/middleware/auth.middleware', () => ({
+  protect: (req, res, next) => {
+    req.user = { userId: 'test-user-123', role: 'user' };
+    next();
+  },
+  authorize: () => (req, res, next) => next()
+}));
 
 describe('Booking API Controller', () => {
   beforeEach(() => {
