@@ -42,7 +42,7 @@ api.interceptors.response.use(
 export const authAPI = {
   // Using absolute URLs to connect to the specific microservice ports locally
   // On Day 9, we will change these base URLs to point to the AWS API Gateway
-  baseURL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3001/api/v1/auth',
+  baseURL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || '/api/v1/auth',
   
   register: async (userData) => {
     const response = await api.post(`${authAPI.baseURL}/register`, userData);
@@ -56,7 +56,7 @@ export const authAPI = {
 };
 
 export const flightAPI = {
-  baseURL: process.env.NEXT_PUBLIC_FLIGHT_SERVICE_URL || 'http://localhost:3002/api/v1/flights',
+  baseURL: process.env.NEXT_PUBLIC_FLIGHT_SERVICE_URL || '/api/v1/flights',
   
   searchFlights: async (params) => {
     // params can include: departureAirport, arrivalAirport, date, minPrice, maxPrice
@@ -96,7 +96,7 @@ export const flightAPI = {
 };
 
 export const bookingAPI = {
-  baseURL: process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL || 'http://localhost:3003/api/v1/bookings',
+  baseURL: process.env.NEXT_PUBLIC_BOOKING_SERVICE_URL || '/api/v1/bookings',
   
   createBooking: async (bookingData) => {
     // bookingData requires: flightId, seatId, price, paymentToken
@@ -116,7 +116,7 @@ export const bookingAPI = {
 };
 
 export const baggageAPI = {
-  baseURL: process.env.NEXT_PUBLIC_BAGGAGE_SERVICE_URL || 'http://localhost:3004/api/v1/baggage',
+  baseURL: process.env.NEXT_PUBLIC_BAGGAGE_SERVICE_URL || '/api/v1/baggage',
   
   getBaggageByBooking: async (bookingId) => {
     const response = await api.get(`${baggageAPI.baseURL}/booking/${bookingId}`);

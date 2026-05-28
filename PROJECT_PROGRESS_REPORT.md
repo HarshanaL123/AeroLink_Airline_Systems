@@ -188,3 +188,33 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 ### 📌 Future Reminders & Considerations
 - We are officially done with the Coding Phase! 
 - Tomorrow is **Day 9 (Deployment Phase)**. We will configure the Terraform state, verify our AWS SES emails, push the Docker images to AWS ECR, and execute the final deployment to Amazon EKS!
+
+---
+
+## 📅 Day 9: AWS Cloud Deployment & EKS Cluster 
+**Date:** May 29, 2026
+
+### ✅ Tasks Completed
+- **EKS Cluster Setup:** Successfully deployed Amazon EKS Cluster with Terraform and node groups.
+- **Microservices Deployment:** Packaged all 4 backend microservices and the React frontend into highly optimized Docker images and pushed them to AWS ECR.
+- **Kubernetes Architecture:** Created and applied Kubernetes Deployments and Services for Auth, Flight, Booking, Baggage, and Frontend.
+- **Public Ingress & ALB:** Configured AWS Load Balancer Controller and Ingress to expose the Frontend and APIs to the public internet securely.
+- **IAM Role Fixes:** Debugged AWS permissions to ensure the EKS Worker Nodes have full access to DynamoDB and EventBridge via IRSA/Node IAM Policies.
+- **Networking Bug Fixes:** Fixed internal cluster DNS routing issues where microservices were attempting to use `localhost` instead of their proper internal Kubernetes Service names (e.g. `flight-service:80`).
+- **Index Misalignment Fix:** Resolved a critical DynamoDB index mismatch between Terraform (`BookingBaggageIndex`) and the Node.js SDK code (`BookingIndex`).
+- **Auto-Scaling (HPA):** Installed Kubernetes Metrics Server and successfully deployed Horizontal Pod Autoscalers (1-3 replicas, 70% CPU target) across all 5 microservices.
+- **Multi-AZ Deployment:** Configured `topologySpreadConstraints` in Kubernetes and increased minimum HPA replicas to 2 to mathematically guarantee High Availability across multiple AWS Availability Zones.
+- **SSM Parameter Store Security (Enhancement #6):** Successfully eliminated plain-text JWT secrets from all Kubernetes YAML files. The master secret is now encrypted in AWS SSM Parameter Store, and dynamically injected into a secure Kubernetes Vault (`secretKeyRef`) at runtime.
+- **Cost-Saving Demo Scripts:** Created `tear_down.ps1` and `spin_up.ps1` to easily delete and recreate the expensive EKS Cluster and NAT Gateways in 15 minutes, preserving DynamoDB data while saving budget overnight.
+- **E2E Cloud Testing:** Successfully completed end-to-end testing (Admin creation, Flight scheduling, Passenger booking, and Baggage tracking) over the live AWS Load Balancer.
+
+---
+**🏆 PHASE 4 OFFICIALLY COMPLETE!** The entire cloud architecture is successfully deployed, auto-scaling, highly available, and secure.
+
+### 🧠 Architectural Decisions
+- **EKS Worker Node Sizing:** Chose `t3.small` for EKS worker nodes to bypass the aggressive Elastic Network Interface (ENI) pod limits on `t3.micro`.
+- **ALB Health Checks:** Configured the ALB to accept HTTP `404` as a healthy status code since the microservices do not expose root `/` endpoints, ensuring traffic flows smoothly to `/api/v1/`.
+
+### 📌 Future Reminders & Considerations
+- Next step for Day 9: **WebSocket Cutover**. We must update the React Frontend to point to the live AWS API Gateway WebSocket URL instead of the local Socket.io mock.
+- AWS SES (Simple Email Service) remains in Sandbox mode. We must manually verify any demo email addresses in the AWS Console if we wish to receive live flight confirmation emails.

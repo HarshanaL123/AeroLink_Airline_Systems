@@ -50,7 +50,7 @@ class Baggage {
   static async findByBookingId(bookingId) {
     const params = {
       TableName,
-      IndexName: 'BookingIndex', // GSI for looking up baggage by booking
+      IndexName: 'BookingBaggageIndex', // GSI for looking up baggage by booking
       KeyConditionExpression: 'bookingId = :bookingId',
       ExpressionAttributeValues: {
         ':bookingId': bookingId,

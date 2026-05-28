@@ -1,10 +1,15 @@
 const AWS = require('aws-sdk');
 
-AWS.config.update({
-  region: process.env.AWS_REGION || 'us-east-1',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local',
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local'
-});
+const awsConfig = {
+  region: process.env.AWS_REGION || 'us-east-1'
+};
+
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  awsConfig.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+  awsConfig.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+}
+
+AWS.config.update(awsConfig);
 
 // If using LocalStack or a custom endpoint for local testing
 const eventBridge = new AWS.EventBridge({

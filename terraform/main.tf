@@ -33,6 +33,18 @@ provider "aws" {
 # Modules (will be enabled as we build each component)
 # =============================================================================
 
+# VPC Networking
+module "vpc" {
+  source      = "./modules/vpc"
+  environment = var.environment
+}
+
+# Container Registry (ECR)
+module "ecr" {
+  source      = "./modules/ecr"
+  environment = var.environment
+}
+
 # DynamoDB Tables
 module "dynamodb" {
   source      = "./modules/dynamodb"
@@ -45,11 +57,13 @@ module "iam" {
   environment = var.environment
 }
 
-# ECS Cluster & Services
-# module "ecs" {
-#   source      = "./modules/ecs"
-#   environment = var.environment
-# }
+# EKS Cluster & Node Groups
+module "eks" {
+  source          = "./modules/eks"
+  environment     = var.environment
+  vpc_id          = module.vpc.vpc_id
+  private_subnets = module.vpc.private_subnets
+}
 
 # API Gateway
 module "api_gateway" {
@@ -60,6 +74,7 @@ module "api_gateway" {
 # =============================================================================
 # Event-Driven Architecture (Sync Pipeline)
 # =============================================================================
+
 
 # 1. SQS Queues
 module "sqs_booking" {

@@ -16,3 +16,8 @@ output "environment" {
 # output "api_gateway_url" { ... }
 # output "ecs_cluster_name" { ... }
 # output "dynamodb_table_names" { ... }
+
+output "alb_iam_role_arn" {
+  description = "IAM Role ARN for the AWS Load Balancer Controller"
+  value       = module.eks.alb_iam_role_arn
+}

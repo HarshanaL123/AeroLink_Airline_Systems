@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { baggageAPI } from '@/services/api';
 import styles from './baggage.module.css';
 
 const TIMELINE_STATES = ['CHECKED_IN', 'LOADING', 'IN_FLIGHT', 'ARRIVED', 'COLLECTED'];
 
-export default function BaggageTrackingPage() {
+function BaggageTrackingFlow() {
   const [bookingId, setBookingId] = useState('');
   const [baggageList, setBaggageList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -193,3 +193,12 @@ export default function BaggageTrackingPage() {
     </div>
   );
 }
+
+export default function BaggageTrackingPage() {
+  return (
+    <Suspense fallback={<div className={styles.container}><div style={{ color: 'white', textAlign: 'center', marginTop: '2rem' }}>Loading Tracker...</div></div>}>
+      <BaggageTrackingFlow />
+    </Suspense>
+  );
+}
+

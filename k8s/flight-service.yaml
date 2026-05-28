@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aerolink-flight-service
+  labels:
+    app: aerolink-flight
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aerolink-flight
+  template:
+    metadata:
+      labels:
+        app: aerolink-flight
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "topology.kubernetes.io/zone"
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: aerolink-flight
+      containers:
+        - name: flight-service
+          image: 012549289252.dkr.ecr.us-east-1.amazonaws.com/aerolink-flight-service-dev:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3002"
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: FLIGHTS_TABLE
+              value: "AeroLink-Flights-dev"
+            - name: SEATS_TABLE
+              value: "AeroLink-Seats-dev"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aerolink-secrets
+                  key: JWT_SECRET
+            - name: EVENT_BUS_NAME
+              value: "AeroLink-EventBus-dev"
+            - name: RATE_LIMIT_WINDOW_MS
+              value: "900000"
+            - name: RATE_LIMIT_MAX_REQUESTS
+              value: "100"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flight-service
+spec:
+  selector:
+    app: aerolink-flight
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3002

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aerolink-frontend
+  labels:
+    app: aerolink-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aerolink-frontend
+  template:
+    metadata:
+      labels:
+        app: aerolink-frontend
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "topology.kubernetes.io/zone"
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: aerolink-frontend
+      containers:
+        - name: frontend
+          image: 012549289252.dkr.ecr.us-east-1.amazonaws.com/aerolink-frontend-dev:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: aerolink-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
