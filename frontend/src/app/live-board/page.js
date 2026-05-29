@@ -30,10 +30,7 @@ export default function LiveFlightBoard() {
 
   // Set up WebSocket connection
   useEffect(() => {
-    // We connect to the local flight-service (Mocking AWS API Gateway for Day 7)
-    // On Day 9, this URL will be updated to the production AWS API Gateway WSS URL.
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3002';
-    
     const socket = io(socketUrl);
 
     socket.on('connect', () => {

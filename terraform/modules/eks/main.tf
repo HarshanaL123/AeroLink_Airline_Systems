@@ -51,11 +51,13 @@ module "eks" {
 # =============================================================================
 # This officially recommended module creates the massive 100+ line IAM policy
 # required for the ALB controller to create AWS Load Balancers on our behalf.
+data "aws_region" "current" {}
+
 module "load_balancer_controller_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.30"
 
-  role_name                              = "AeroLink-ALB-Controller-${var.environment}"
+  role_name                              = "AeroLink-ALB-Controller-${var.environment}-${data.aws_region.current.name}"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {

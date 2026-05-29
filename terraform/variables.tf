@@ -3,9 +3,15 @@
 # =============================================================================
 
 variable "aws_region" {
-  description = "AWS region for resource deployment"
+  description = "AWS primary region for resource deployment"
   type        = string
   default     = "us-east-1"
+}
+
+variable "aws_region_eu" {
+  description = "AWS secondary region for multi-region active-active deployment"
+  type        = string
+  default     = "eu-west-1"
 }
 
 variable "environment" {

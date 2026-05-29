@@ -1,13 +1,21 @@
 $ErrorActionPreference = "Stop"
-$Region = "us-east-1"
+$RegionUS = "us-east-1"
+$RegionEU = "eu-west-1"
 $Environment = "dev"
 
 Write-Host "Fetching AWS Account ID..." -ForegroundColor Cyan
 $AccountId = (aws sts get-caller-identity --query Account --output text)
-$RegistryUrl = "$AccountId.dkr.ecr.$Region.amazonaws.com"
 
-Write-Host "Logging into AWS ECR at $RegistryUrl..." -ForegroundColor Cyan
-aws ecr get-login-password --region $Region | docker login --username AWS --password-stdin $RegistryUrl
+$RegistryUrlUS = "$AccountId.dkr.ecr.$RegionUS.amazonaws.com"
+$RegistryUrlEU = "$AccountId.dkr.ecr.$RegionEU.amazonaws.com"
+
+Write-Host "Logging into AWS ECR US ($RegionUS)..." -ForegroundColor Cyan
+$TokenUS = (aws ecr get-login-password --region $RegionUS)
+docker login --username AWS --password $TokenUS $RegistryUrlUS
+
+Write-Host "Logging into AWS ECR EU ($RegionEU)..." -ForegroundColor Cyan
+$TokenEU = (aws ecr get-login-password --region $RegionEU)
+docker login --username AWS --password $TokenEU $RegistryUrlEU
 
 $Services = @(
     "auth-service",
@@ -19,24 +27,32 @@ $Services = @(
 
 foreach ($service in $Services) {
     $RepoName = "aerolink-$service-$Environment"
-    $ImageUri = "$RegistryUrl/$RepoName`:latest"
+    $ImageUriUS = "$RegistryUrlUS/$RepoName`:latest"
+    $ImageUriEU = "$RegistryUrlEU/$RepoName`:latest"
     
     Write-Host "----------------------------------------" -ForegroundColor Yellow
     Write-Host "Building Docker image for $service..." -ForegroundColor Cyan
     
     $ContextDir = if ($service -eq "frontend") { "frontend" } else { "services/$service" }
     
-    # Check if directory exists
     if (-not (Test-Path $ContextDir)) {
         Write-Host "Directory $ContextDir does not exist! Please make sure you are in the project root." -ForegroundColor Red
         exit 1
     }
     
+    # Build once locally
     docker build -t $RepoName $ContextDir
-    docker tag $RepoName`:latest $ImageUri
     
-    Write-Host "Pushing $ImageUri to ECR..." -ForegroundColor Cyan
-    docker push $ImageUri
+    # Tag for US and Push
+    Write-Host "Tagging and Pushing to US ECR..." -ForegroundColor Cyan
+    docker tag $RepoName`:latest $ImageUriUS
+    docker push $ImageUriUS
+    
+    # Tag for EU and Push
+    Write-Host "Tagging and Pushing to EU ECR..." -ForegroundColor Cyan
+    docker tag $RepoName`:latest $ImageUriEU
+    docker push $ImageUriEU
 }
 
-Write-Host "All images successfully built and pushed to AWS ECR!" -ForegroundColor Green
+Write-Host "----------------------------------------" -ForegroundColor Yellow
+Write-Host "All images successfully built and pushed to BOTH US and EU AWS ECRs!" -ForegroundColor Green

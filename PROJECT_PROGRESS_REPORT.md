@@ -218,3 +218,24 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 ### 📌 Future Reminders & Considerations
 - Next step for Day 9: **WebSocket Cutover**. We must update the React Frontend to point to the live AWS API Gateway WebSocket URL instead of the local Socket.io mock.
 - AWS SES (Simple Email Service) remains in Sandbox mode. We must manually verify any demo email addresses in the AWS Console if we wish to receive live flight confirmation emails.
+
+---
+
+## 📅 Day 9.5: Multi-Region Global Deployment (Active-Active)
+**Date:** May 29, 2026
+
+### ✅ Tasks Completed
+- **Global Database Upgrades:** Successfully upgraded all 7 DynamoDB tables to **DynamoDB Global Tables**, enabling sub-second, cross-continent data replication between the US and Europe.
+- **Dual-Region Infrastructure:** Executed massive Terraform restructuring to deploy a 100% independent, fully functional duplicate of the cloud infrastructure into the `eu-west-1` (Ireland) region, including VPCs, EKS Clusters, EventBuses, and SQS Queues.
+- **Automated Global Deployments:** Updated PowerShell deployment scripts (`push_to_ecr.ps1`, `spin_up.ps1`) to seamlessly build and deploy the 5 microservices to both continents simultaneously.
+- **Frontend Relative Routing Fix:** Eliminated hardcoded `localhost` variables from the React frontend (`services/api.js`). Re-engineered the application to use dynamic **Relative Paths**, allowing a single Docker image to intelligently route API traffic based on the continent it's being served from.
+- **Webhook Deadlock Resolution:** Debugged and resolved a Kubernetes security lockout (`no endpoints available`) by reinstalling the AWS Load Balancer Controller Helm chart with the correct `ServiceAccount` RBAC permissions, unblocking Ingress creation globally.
+- **Secret Re-Injection:** Successfully diagnosed and resolved a `CreateContainerConfigError` by injecting the required cryptographic `JWT_SECRET` manually into the fresh Kubernetes clusters, allowing all backend pods to successfully boot up.
+- **Cross-Region E2E Synchronization Test:** Formally proved the Active-Active architecture works by executing a brilliant distributed test: A user in the US region booked a flight, and the Administrator dashboard in the EU region instantly updated to reflect the new active booking and increased revenue.
+
+### 🧠 Architectural Decisions
+- **Active-Active Independent Routing (Bypassing Route 53):** We made a strategic decision to bypass AWS Route 53 Latency-Based Routing to strictly protect the student sandbox account from unexpected Hosted Zone charges. Instead, we exposed the two regional ALBs directly. This beautifully demonstrated the underlying data synchronization without risking budget overruns.
+- **WebSocket Centralization:** We opted to keep the API Gateway WebSocket connection pointing to the US region (`us-east-1`) globally. Because WebSockets require persistent connections, having a single global entry point simplifies the EventBridge signaling architecture while maintaining real-time functionality for users worldwide.
+
+### 📌 Future Reminders & Considerations
+- Moving forward into **Day 10 (Fault Tolerance & Security Hardening)**, we must focus on Disaster Recovery (migrating Terraform state to a remote S3 backend) and monitoring the SQS Dead Letter Queues (DLQs).

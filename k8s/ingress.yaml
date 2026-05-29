@@ -11,6 +11,7 @@ metadata:
     # AWS ELB Health Check Fix (Our services return 404 for the root '/' path)
     alb.ingress.kubernetes.io/success-codes: '200-404'
 spec:
+  ingressClassName: alb
   rules:
     - http:
         paths:

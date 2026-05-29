@@ -8,9 +8,11 @@
 
 # 1. Users Table (Auth Service)
 resource "aws_dynamodb_table" "users" {
-  name         = "AeroLink-Users-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "userId"
+  name             = "AeroLink-Users-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "userId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "userId"
@@ -26,6 +28,10 @@ resource "aws_dynamodb_table" "users" {
     name               = "EmailIndex"
     hash_key           = "email"
     projection_type    = "ALL"
+  }
+
+  replica {
+    region_name = var.replica_region
   }
 }
 
@@ -52,6 +58,10 @@ resource "aws_dynamodb_table" "flights" {
     hash_key           = "routeDate"
     projection_type    = "ALL"
   }
+
+  replica {
+    region_name = var.replica_region
+  }
 }
 
 # 3. Seats Table (Flight/Booking Service)
@@ -71,6 +81,10 @@ resource "aws_dynamodb_table" "seats" {
   attribute {
     name = "seatId"
     type = "S"
+  }
+
+  replica {
+    region_name = var.replica_region
   }
 }
 
@@ -97,25 +111,37 @@ resource "aws_dynamodb_table" "bookings" {
     hash_key           = "userId"
     projection_type    = "ALL"
   }
+
+  replica {
+    region_name = var.replica_region
+  }
 }
 
 # 5. Payments Table (Booking Service / Saga)
 resource "aws_dynamodb_table" "payments" {
-  name         = "AeroLink-Payments-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "paymentId"
+  name             = "AeroLink-Payments-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "paymentId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "paymentId"
     type = "S"
   }
+
+  replica {
+    region_name = var.replica_region
+  }
 }
 
 # 6. Baggage Table (Baggage Service)
 resource "aws_dynamodb_table" "baggage" {
-  name         = "AeroLink-Baggage-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "baggageId"
+  name             = "AeroLink-Baggage-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "baggageId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "baggageId"
@@ -132,13 +158,19 @@ resource "aws_dynamodb_table" "baggage" {
     hash_key           = "bookingId"
     projection_type    = "ALL"
   }
+
+  replica {
+    region_name = var.replica_region
+  }
 }
 
 # 7. Notifications Table (Notification Service)
 resource "aws_dynamodb_table" "notifications" {
-  name         = "AeroLink-Notifications-${var.environment}"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "notificationId"
+  name             = "AeroLink-Notifications-${var.environment}"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "notificationId"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   attribute {
     name = "notificationId"
@@ -154,5 +186,9 @@ resource "aws_dynamodb_table" "notifications" {
     name               = "UserNotificationsIndex"
     hash_key           = "userId"
     projection_type    = "ALL"
+  }
+
+  replica {
+    region_name = var.replica_region
   }
 }
