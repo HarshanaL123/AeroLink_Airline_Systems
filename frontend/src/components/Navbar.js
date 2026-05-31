@@ -67,6 +67,9 @@ export default function Navbar() {
                 <Link href="/baggage-tracking" className={pathname === '/baggage-tracking' ? styles.active : ''}>
                   Track Baggage
                 </Link>
+                <Link href="/settings" className={pathname === '/settings' ? styles.active : ''}>
+                  Settings
+                </Link>
               </>
             )}
 

@@ -264,8 +264,29 @@ module "apigateway_websocket_eu" {
 #   environment = var.environment
 # }
 
-# CloudWatch Monitoring
-# module "cloudwatch" {
-#   source      = "./modules/cloudwatch"
-#   environment = var.environment
-# }
+# CloudWatch Monitoring - US
+module "cloudwatch" {
+  source      = "./modules/cloudwatch"
+  environment = var.environment
+  alert_email = var.alert_email
+  dlq_names = [
+    module.sqs_booking.dlq_name,
+    module.sqs_baggage.dlq_name,
+    module.sqs_notification.dlq_name
+  ]
+}
+
+# CloudWatch Monitoring - EU
+module "cloudwatch_eu" {
+  source      = "./modules/cloudwatch"
+  environment = var.environment
+  alert_email = var.alert_email
+  providers = {
+    aws = aws.eu
+  }
+  dlq_names = [
+    module.sqs_booking_eu.dlq_name,
+    module.sqs_baggage_eu.dlq_name,
+    module.sqs_notification_eu.dlq_name
+  ]
+}

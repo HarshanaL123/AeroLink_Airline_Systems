@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const sanitizeMiddleware = require('./middleware/sanitize');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
+const AWSXRay = require('aws-xray-sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -27,10 +29,25 @@ io.on('connection', (socket) => {
   });
 });
 
-// Middleware
+// AWS X-Ray Middleware
+app.use(AWSXRay.express.openSegment('FlightService'));
+
+// Dynamic Enterprise CORS Policy
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin) || /\.amazonaws\.com$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS Security Policy'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
+app.use(sanitizeMiddleware); // Prevent XSS Attacks
 app.use(morgan('combined'));
 
 // Health Check Endpoint (Enhancement #2)

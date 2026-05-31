@@ -14,6 +14,10 @@ resource "aws_dynamodb_table" "users" {
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
+  server_side_encryption {
+    enabled = true
+  }
+
   attribute {
     name = "userId"
     type = "S"
@@ -42,6 +46,10 @@ resource "aws_dynamodb_table" "flights" {
   hash_key         = "flightId"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  server_side_encryption {
+    enabled = true
+  }
 
   attribute {
     name = "flightId"
@@ -73,6 +81,10 @@ resource "aws_dynamodb_table" "seats" {
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
+  server_side_encryption {
+    enabled = true
+  }
+
   attribute {
     name = "flightId"
     type = "S"
@@ -95,6 +107,10 @@ resource "aws_dynamodb_table" "bookings" {
   hash_key         = "bookingId"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  server_side_encryption {
+    enabled = true
+  }
 
   attribute {
     name = "bookingId"
@@ -125,6 +141,10 @@ resource "aws_dynamodb_table" "payments" {
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
 
+  server_side_encryption {
+    enabled = true
+  }
+
   attribute {
     name = "paymentId"
     type = "S"
@@ -142,6 +162,10 @@ resource "aws_dynamodb_table" "baggage" {
   hash_key         = "baggageId"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  server_side_encryption {
+    enabled = true
+  }
 
   attribute {
     name = "baggageId"
@@ -171,6 +195,10 @@ resource "aws_dynamodb_table" "notifications" {
   hash_key         = "notificationId"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  server_side_encryption {
+    enabled = true
+  }
 
   attribute {
     name = "notificationId"

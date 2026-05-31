@@ -134,4 +134,18 @@ export const baggageAPI = {
   }
 };
 
+export const userAPI = {
+  baseURL: '/api/v1/users',
+
+  downloadData: async () => {
+    const response = await api.get(`${userAPI.baseURL}/me/data`);
+    return response.data;
+  },
+
+  deleteAccount: async () => {
+    const response = await api.delete(`${userAPI.baseURL}/me`);
+    return response.data;
+  }
+};
+
 export default api;

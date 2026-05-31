@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const sanitizeMiddleware = require('./middleware/sanitize');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
@@ -10,8 +11,22 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// Dynamic Enterprise CORS Policy
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin) || /\.amazonaws\.com$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS Security Policy'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(express.json());
+app.use(sanitizeMiddleware); // Prevent XSS Attacks
 app.use(morgan('combined'));
 
 // Health Check Endpoint (Enhancement #2)
@@ -39,6 +54,7 @@ const authLimiter = rateLimit({
 
 // API Routes (v1 — Enhancement #3)
 app.use('/api/v1/auth', authLimiter, require('./routes/auth.routes'));
+app.use('/api/v1/users', authLimiter, require('./routes/user.routes'));
 
 // Global Error Handler
 app.use((err, req, res, next) => {

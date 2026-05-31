@@ -47,6 +47,30 @@ class User {
     const result = await dynamoDb.query(params).promise();
     return result.Items.length > 0 ? result.Items[0] : null;
   }
+
+  static async findById(userId) {
+    const params = {
+      TableName,
+      Key: {
+        userId: userId,
+      },
+    };
+
+    const result = await dynamoDb.get(params).promise();
+    return result.Item || null;
+  }
+
+  static async delete(userId) {
+    const params = {
+      TableName,
+      Key: {
+        userId: userId,
+      },
+    };
+
+    await dynamoDb.delete(params).promise();
+    return true;
+  }
 }
 
 module.exports = User;

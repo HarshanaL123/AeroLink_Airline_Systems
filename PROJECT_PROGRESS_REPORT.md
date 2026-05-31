@@ -205,7 +205,7 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 - **Auto-Scaling (HPA):** Installed Kubernetes Metrics Server and successfully deployed Horizontal Pod Autoscalers (1-3 replicas, 70% CPU target) across all 5 microservices.
 - **Multi-AZ Deployment:** Configured `topologySpreadConstraints` in Kubernetes and increased minimum HPA replicas to 2 to mathematically guarantee High Availability across multiple AWS Availability Zones.
 - **SSM Parameter Store Security (Enhancement #6):** Successfully eliminated plain-text JWT secrets from all Kubernetes YAML files. The master secret is now encrypted in AWS SSM Parameter Store, and dynamically injected into a secure Kubernetes Vault (`secretKeyRef`) at runtime.
-- **Cost-Saving Demo Scripts:** Created `tear_down.ps1` and `spin_up.ps1` to easily delete and recreate the expensive EKS Cluster and NAT Gateways in 15 minutes, preserving DynamoDB data while saving budget overnight.
+- **Cost-Saving Demo Scripts:** Created `tear_down.ps1` and `spin_up.ps1` to easily delete and recreate the expensive EKS Cluster and NAT Gateways in 15 minutes. Note: This performs a full `terraform destroy` which securely wipes DynamoDB data to guarantee $0 overnight charges on the Free Tier.
 - **E2E Cloud Testing:** Successfully completed end-to-end testing (Admin creation, Flight scheduling, Passenger booking, and Baggage tracking) over the live AWS Load Balancer.
 
 ---
@@ -237,5 +237,28 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 - **Active-Active Independent Routing (Bypassing Route 53):** We made a strategic decision to bypass AWS Route 53 Latency-Based Routing to strictly protect the student sandbox account from unexpected Hosted Zone charges. Instead, we exposed the two regional ALBs directly. This beautifully demonstrated the underlying data synchronization without risking budget overruns.
 - **WebSocket Centralization:** We opted to keep the API Gateway WebSocket connection pointing to the US region (`us-east-1`) globally. Because WebSockets require persistent connections, having a single global entry point simplifies the EventBridge signaling architecture while maintaining real-time functionality for users worldwide.
 
+---
+
+## 📅 Day 10: Security, Resilience, and Compliance
+**Date:** May 31, 2026
+
+### ✅ Tasks Completed
+- **Data Encryption (KMS):** Configured AWS KMS Encryption for DynamoDB Global Tables to ensure data security at rest.
+- **Automated Alerting (CloudWatch):** Implemented CloudWatch Alarms on SQS Dead Letter Queues (DLQs) to actively monitor message failures.
+- **Fault Tolerance (Circuit Breaker):** Created a custom Circuit Breaker middleware (`resilience.js`) to protect microservices from cascading failures during high load.
+- **Network Resilience:** Implemented Exponential Backoff algorithms for inter-service communication to mathematically prevent retry-storms.
+- **API Security (CORS & Validation):** 
+  - Locked down cross-origin requests using a highly secure Regex CORS policy allowing only `localhost` and AWS ALB domains.
+  - Built a custom payload sanitization middleware to prevent Cross-Site Scripting (XSS) attacks.
+- **Legal Compliance (GDPR):** 
+  - Implemented GDPR API endpoints (`GET /api/v1/users/me/data` and `DELETE /api/v1/users/me`).
+  - Built a full-stack Next.js "Privacy Settings" UI for users to seamlessly download their data or delete their accounts without administrative assistance.
+- **Disaster Recovery Strategy:** Authored a comprehensive Disaster Recovery Documentation plan outlining RTO, RPO, and automated backups, successfully checking off the final Day 10 requirement.
+
+### 🧠 Architectural Decisions
+- **Regex CORS over Hardcoded URLs:** To support the dynamic, auto-generated AWS ALB URLs used in Terraform (without relying on Route53 static domains), we engineered a Regex CORS origin `/\.amazonaws\.com$/`. This guarantees both extreme security and flexible infrastructure deployment.
+- **GDPR Dedicated Controller:** Decided to extract GDPR logic into a dedicated `/users` router rather than bolting it onto the `/auth` router. This maintains clean RESTful principles and respects strict microservice design patterns.
+
 ### 📌 Future Reminders & Considerations
-- Moving forward into **Day 10 (Fault Tolerance & Security Hardening)**, we must focus on Disaster Recovery (migrating Terraform state to a remote S3 backend) and monitoring the SQS Dead Letter Queues (DLQs).
+- Moving forward into **Day 11 (Performance Testing)**, we must configure Artillery or JMeter to bombard our system with traffic to test our Horizontal Pod Autoscalers and Circuit Breakers.
+- We must remember to temporarily disable the API Gateway Rate Limiters (or bypass them) during load testing, otherwise, our tests will be artificially blocked by our own DDoS protection!

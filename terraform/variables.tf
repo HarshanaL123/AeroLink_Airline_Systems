@@ -15,9 +15,15 @@ variable "aws_region_eu" {
 }
 
 variable "environment" {
-  description = "Deployment environment (dev, staging, prod)"
+  description = "The environment name (e.g., dev, prod)"
   type        = string
   default     = "dev"
+}
+
+variable "alert_email" {
+  description = "The email address to receive critical SNS alerts"
+  type        = string
+  default     = "syosa920@gmail.com"
 }
 
 variable "project_name" {

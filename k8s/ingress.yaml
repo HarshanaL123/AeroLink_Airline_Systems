@@ -22,6 +22,13 @@ spec:
                 name: auth-service
                 port:
                   number: 80
+          - path: /api/v1/users
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
           - path: /api/v1/flights
             pathType: Prefix
             backend:

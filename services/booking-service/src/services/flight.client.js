@@ -4,6 +4,9 @@
  * Used by the Saga Orchestrator for distributed transactions
  */
 const jwt = require('jsonwebtoken');
+const { CircuitBreaker, fetchWithRetry } = require('../utils/resilience');
+
+const flightServiceBreaker = new CircuitBreaker(3, 15000); // Trip after 3 failures, cool down 15s
 
 const FLIGHT_SERVICE_URL = process.env.FLIGHT_SERVICE_URL || 'http://aerolink-flight:3002/api/v1/flights';
 
@@ -26,7 +29,7 @@ class FlightClient {
    */
   static async reserveSeat(flightId, seatId) {
     try {
-      const response = await fetch(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
+      const action = () => fetchWithRetry(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -34,6 +37,8 @@ class FlightClient {
         },
         body: JSON.stringify({ status: 'RESERVED' })
       });
+
+      const response = await flightServiceBreaker.fire(action);
 
       const data = await response.json();
       
@@ -55,7 +60,7 @@ class FlightClient {
    */
   static async confirmSeat(flightId, seatId) {
     try {
-      const response = await fetch(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
+      const action = () => fetchWithRetry(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -63,6 +68,8 @@ class FlightClient {
         },
         body: JSON.stringify({ status: 'BOOKED' })
       });
+
+      const response = await flightServiceBreaker.fire(action);
 
       const data = await response.json();
       
@@ -84,7 +91,7 @@ class FlightClient {
    */
   static async releaseSeat(flightId, seatId) {
     try {
-      const response = await fetch(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
+      const action = () => fetchWithRetry(`${FLIGHT_SERVICE_URL}/${flightId}/seats/${seatId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -92,6 +99,8 @@ class FlightClient {
         },
         body: JSON.stringify({ status: 'AVAILABLE' })
       });
+
+      const response = await flightServiceBreaker.fire(action);
 
       const data = await response.json();
       

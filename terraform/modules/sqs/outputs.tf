@@ -17,3 +17,8 @@ output "dlq_arn" {
   description = "The ARN of the created Dead Letter Queue"
   value       = aws_sqs_queue.dlq.arn
 }
+
+output "dlq_name" {
+  description = "The Name of the created Dead Letter Queue"
+  value       = aws_sqs_queue.dlq.name
+}
