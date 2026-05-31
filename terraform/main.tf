@@ -258,11 +258,42 @@ module "apigateway_websocket_eu" {
   }
 }
 
-# Lambda (Notification Service)
-# module "lambda" {
-#   source      = "./modules/lambda"
-#   environment = var.environment
-# }
+# Lambda (Notification Service) - US
+module "lambda" {
+  source         = "./modules/lambda"
+  function_name  = "AeroLink-NotificationService-US-${var.environment}"
+  source_dir     = "${path.module}/../services/notification-service"
+  event_bus_name = module.eventbridge.event_bus_name
+  event_pattern  = jsonencode({
+    "source"      = ["aerolink.booking", "aerolink.baggage"],
+    "detail-type" = ["booking.created", "booking.cancelled", "baggage.checked-in"]
+  })
+  environment_variables = {
+    "NOTIFICATIONS_TABLE" = "AeroLink-Notifications-${var.environment}"
+    "SENDER_EMAIL"        = "syosa920@gmail.com"
+    "AWS_NODEJS_CONNECTION_REUSE_ENABLED" = "1"
+  }
+}
+
+# Lambda (Notification Service) - EU
+module "lambda_eu" {
+  source         = "./modules/lambda"
+  function_name  = "AeroLink-NotificationService-EU-${var.environment}"
+  source_dir     = "${path.module}/../services/notification-service"
+  event_bus_name = module.eventbridge_eu.event_bus_name
+  event_pattern  = jsonencode({
+    "source"      = ["aerolink.booking", "aerolink.baggage"],
+    "detail-type" = ["booking.created", "booking.cancelled", "baggage.checked-in"]
+  })
+  environment_variables = {
+    "NOTIFICATIONS_TABLE" = "AeroLink-Notifications-${var.environment}"
+    "SENDER_EMAIL"        = "syosa920@gmail.com"
+    "AWS_NODEJS_CONNECTION_REUSE_ENABLED" = "1"
+  }
+  providers = {
+    aws = aws.eu
+  }
+}
 
 # CloudWatch Monitoring - US
 module "cloudwatch" {

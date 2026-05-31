@@ -10,11 +10,14 @@
     "package": "zip -r notification-service.zip src/ node_modules/ package.json"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1057.0",
+    "@aws-sdk/client-ses": "^3.1057.0",
+    "@aws-sdk/lib-dynamodb": "^3.1057.0",
     "aws-sdk": "^2.1692.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
-    "eslint": "^9.11.0"
+    "eslint": "^9.11.0",
+    "jest": "^29.7.0"
   }
 }

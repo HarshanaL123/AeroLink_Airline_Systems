@@ -1,16 +1,22 @@
-const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const { randomUUID } = require('crypto');
 
-// Configure AWS Services
-const ses = new AWS.SES({ region: process.env.AWS_REGION || 'us-east-1' });
+// Configure AWS Services (Using AWS SDK v3 for Node.js 20+)
+const sesClient = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
 
 const dynamoDbConfig = { region: process.env.AWS_REGION || 'us-east-1' };
 if (process.env.DYNAMODB_ENDPOINT) {
   dynamoDbConfig.endpoint = process.env.DYNAMODB_ENDPOINT;
-  dynamoDbConfig.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  dynamoDbConfig.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+  dynamoDbConfig.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  };
 }
-const dynamoDb = new AWS.DynamoDB.DocumentClient(dynamoDbConfig);
+
+const dynamoDbClient = new DynamoDBClient(dynamoDbConfig);
+const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
 
 const TableName = process.env.NOTIFICATIONS_TABLE || 'Notifications';
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'syosa920@gmail.com';
@@ -39,7 +45,7 @@ exports.handler = async (event) => {
 
   try {
     const detailType = event['detail-type'];
-    const detail = event.detail; // EventBridge puts the payload in the 'detail' object
+    const detail = event.detail;
 
     if (!detailType || !detail) {
       console.warn('Skipping event: missing detail-type or detail payload.');
@@ -50,18 +56,17 @@ exports.handler = async (event) => {
     let subject = '';
     let htmlBody = '';
 
-    // Route logic based on the specific EventBridge event
     switch (detailType) {
       case 'booking.created':
-        // Expecting the booking event to include passengerEmail
         toEmail = detail.passengerEmail || detail.email; 
         subject = 'AeroLink - Booking Confirmation';
         htmlBody = `
           <h2>Thank you for booking with AeroLink!</h2>
           <p>Your booking <strong>${detail.bookingId}</strong> has been confirmed.</p>
           <p>Flight ID: ${detail.flightId}</p>
-          <p>Seat: ${detail.seatNumber}</p>
+          <p>Seat: ${detail.seatNumber || detail.seatId}</p>
           <br>
+          <p><strong>IMPORTANT:</strong> Please use your Booking ID (<strong>${detail.bookingId}</strong>) to complete your Online Check-in 24 hours before your flight.</p>
           <p>We wish you a pleasant flight.</p>
         `;
         break;
@@ -77,7 +82,7 @@ exports.handler = async (event) => {
         break;
 
       case 'baggage.checked-in':
-        toEmail = detail.passengerEmail || detail.email; // We assume the baggage event was enriched with the email, or we'd fetch it
+        toEmail = detail.passengerEmail || detail.email; 
         subject = 'AeroLink - Baggage Checked In';
         htmlBody = `
           <h2>Baggage Checked In</h2>
@@ -91,29 +96,28 @@ exports.handler = async (event) => {
         return { statusCode: 200, body: 'Event ignored' };
     }
 
-    // Safety check: Ensure we have an email address dynamically extracted
     if (!toEmail) {
       console.error('No target email address found in the event payload. Cannot send email.');
       return { statusCode: 400, body: 'Missing target email address' };
     }
 
-    // 1. Send the Email via AWS SES
+    // 1. Send the Email via AWS SES SDK v3
     let messageId = 'mocked-message-id';
     
-    // In local testing, we skip the actual SES API call unless explicitly configured
     if (process.env.NODE_ENV !== 'test' && !process.env.MOCK_SES) {
-      const sesResult = await ses.sendEmail(buildEmailParams(toEmail, subject, htmlBody)).promise();
+      const command = new SendEmailCommand(buildEmailParams(toEmail, subject, htmlBody));
+      const sesResult = await sesClient.send(command);
       messageId = sesResult.MessageId;
       console.log(`[SES] Email sent successfully to ${toEmail}. MessageId: ${messageId}`);
     } else {
       console.log(`[SES MOCK] Simulated sending email to ${toEmail}`);
     }
 
-    // 2. Save Notification Record to DynamoDB for audit history
+    // 2. Save Notification Record to DynamoDB SDK v3
     const notificationRecord = {
       TableName,
       Item: {
-        notificationId: uuidv4(),
+        notificationId: randomUUID(),
         targetEmail: toEmail,
         eventType: detailType,
         subject: subject,
@@ -123,14 +127,14 @@ exports.handler = async (event) => {
       }
     };
 
-    await dynamoDb.put(notificationRecord).promise();
+    const putCommand = new PutCommand(notificationRecord);
+    await dynamoDb.send(putCommand);
     console.log(`[DynamoDB] Saved notification record to ${TableName}`);
 
     return { statusCode: 200, body: 'Notification processed successfully' };
 
   } catch (error) {
     console.error('Error processing notification:', error);
-    // Return error so EventBridge/SQS knows to retry if configured with a DLQ
     throw error;
   }
 };

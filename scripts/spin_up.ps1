@@ -24,7 +24,19 @@ Write-Host "`n[3/6] Configuring US EKS Cluster ($RegionUS)..." -ForegroundColor 
 aws eks update-kubeconfig --region $RegionUS --name $ClusterName --alias aerolink-us
 kubectl config use-context aerolink-us
 
+Write-Host "Installing AWS Load Balancer Controller in US Cluster..." -ForegroundColor Yellow
+$US_VPC = (aws eks describe-cluster --name $ClusterName --region $RegionUS --query "cluster.resourcesVpcConfig.vpcId" --output text)
+$US_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text).Trim()
+$US_ROLE_ARN = "arn:aws:iam::${US_ACCOUNT_ID}:role/AeroLink-ALB-Controller-${Environment}-${RegionUS}"
+helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=$ClusterName --set serviceAccount.create=true --set serviceAccount.name=aws-load-balancer-controller --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$US_ROLE_ARN --set region=$RegionUS --set vpcId=$US_VPC
+
+Write-Host "Waiting for US Load Balancer Controller to become ready..." -ForegroundColor Yellow
+kubectl rollout status deployment aws-load-balancer-controller -n kube-system --timeout=120s
+
+
+
 Write-Host "Deploying Microservices to US Cluster..." -ForegroundColor Cyan
+kubectl create secret generic aerolink-secrets --from-literal=JWT_SECRET="SuperSecretAeroLinkKey123!@#" --from-literal=STRIPE_SECRET_KEY="sk_test_123456789" --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f k8s/
 
 # 3. Configure EU Cluster
@@ -32,7 +44,19 @@ Write-Host "`n[4/6] Configuring EU EKS Cluster ($RegionEU)..." -ForegroundColor 
 aws eks update-kubeconfig --region $RegionEU --name $ClusterName --alias aerolink-eu
 kubectl config use-context aerolink-eu
 
+Write-Host "Installing AWS Load Balancer Controller in EU Cluster..." -ForegroundColor Yellow
+$EU_VPC = (aws eks describe-cluster --name $ClusterName --region $RegionEU --query "cluster.resourcesVpcConfig.vpcId" --output text)
+$EU_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text).Trim()
+$EU_ROLE_ARN = "arn:aws:iam::${EU_ACCOUNT_ID}:role/AeroLink-ALB-Controller-${Environment}-${RegionEU}"
+helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=$ClusterName --set serviceAccount.create=true --set serviceAccount.name=aws-load-balancer-controller --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$EU_ROLE_ARN --set region=$RegionEU --set vpcId=$EU_VPC
+
+Write-Host "Waiting for EU Load Balancer Controller to become ready..." -ForegroundColor Yellow
+kubectl rollout status deployment aws-load-balancer-controller -n kube-system --timeout=120s
+
+
+
 Write-Host "Deploying Microservices to EU Cluster..." -ForegroundColor Cyan
+kubectl create secret generic aerolink-secrets --from-literal=JWT_SECRET="SuperSecretAeroLinkKey123!@#" --from-literal=STRIPE_SECRET_KEY="sk_test_123456789" --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f k8s/
 
 # 4. Wait for ALBs to Provision

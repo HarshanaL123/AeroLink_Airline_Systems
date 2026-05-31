@@ -9,7 +9,7 @@ class BookingSaga {
    * Execute the booking saga
    * @param {object} param0 
    */
-  static async executeBookingFlow({ userId, flightId, seatId, price, paymentToken }) {
+  static async executeBookingFlow({ userId, email, flightId, seatId, price, paymentToken }) {
     console.log(`[SAGA START] Initiating Booking Saga for User: ${userId}, Flight: ${flightId}`);
 
     // Step 1: Create Booking in PENDING state (Local Transaction)
@@ -63,6 +63,7 @@ class BookingSaga {
       await publishEvent('aerolink.booking', 'booking.created', {
         bookingId,
         userId,
+        passengerEmail: email,
         flightId,
         seatId,
         price,

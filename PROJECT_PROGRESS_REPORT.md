@@ -262,3 +262,22 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 ### 📌 Future Reminders & Considerations
 - Moving forward into **Day 11 (Performance Testing)**, we must configure Artillery or JMeter to bombard our system with traffic to test our Horizontal Pod Autoscalers and Circuit Breakers.
 - We must remember to temporarily disable the API Gateway Rate Limiters (or bypass them) during load testing, otherwise, our tests will be artificially blocked by our own DDoS protection!
+
+---
+
+## 📅 Day 10.5: Comprehensive System Debugging & Operational Enhancements
+**Date:** May 31, 2026
+
+### ✅ Tasks Completed
+- **Global Table Replication Sync Fix:** Resolved a critical cross-region race condition where EventBridge triggered the Booking Saga faster than AWS DynamoDB Global Tables could replicate the initial record. Engineered an intelligent `setTimeout` exponential backoff loop inside `executeBookingFlow` to automatically wait for the US-to-EU replication sync, guaranteeing atomic transaction success globally.
+- **Staff Operations Portal:** Developed and deployed the highly secure `/staff` Baggage Tracking Dashboard. Implemented robust frontend logic allowing ground operations teams to scan boarding passes (Booking IDs), register luggage weights, print virtual bag tags, and update global tracking states (`CHECKED_IN`, `IN_FLIGHT`, etc.).
+- **Serverless AWS SDK v3 Migration:** Diagnosed a silent `Runtime.ImportModuleError` causing email failures. Discovered AWS Lambda Node.js 20 runtimes removed the legacy `aws-sdk` (v2). Completely rewrote the Notification Service `handler.js` to use the cloud-native `@aws-sdk/client-ses` (v3) and native Node `crypto` modules, drastically reducing Lambda cold-start times and zip payload size.
+- **Frontend API Gateway Routing Fix:** Debugged insidious `404 Not Found` errors crashing the Check-in and Staff portals. Identified that raw relative paths (`/bookings/`) were bypassing the Ingress Load Balancer rules. Corrected the Next.js API wrapper (`api.js`) to strictly enforce the `/api/v1/` microservice routing prefix globally.
+- **Full E2E Operational Success:** Conducted comprehensive end-to-end tests across the live AWS clusters. Mathematically verified that a passenger can successfully book a flight, receive an SES confirmation email, utilize the digital Check-in portal, and have their baggage tracked seamlessly by ground staff.
+
+### 🧠 Architectural Decisions
+- **Zero-Dependency Lambdas:** By adopting AWS SDK v3 and Node's native `crypto.randomUUID()`, we engineered the Notification Service Lambda to require exactly zero external `node_modules`. This is an elite enterprise pattern that maximizes execution speed and deployment efficiency.
+- **Resilient Saga Polling over Blocking:** Rather than throwing an immediate 500 error if a DynamoDB record isn't found during a Saga step, we implemented a non-blocking retry loop. This elegantly handles the realities of eventual consistency in a globally distributed multi-region database.
+
+### 🐛 Debugging Deep Dive
+- **The "Silent Email" Mystery:** Emails were failing to send despite the Booking Saga succeeding. By querying AWS CloudWatch Logs using the AWS CLI, we traced the exact point of failure to a missing dependency in the AWS Lambda Node 20 runtime. After migrating to SDK v3, a minor CommonJS vs ES6 (`require` vs `from`) syntax error was caught and rapidly patched, successfully unblocking the SES pipeline.

@@ -50,9 +50,14 @@ export default function Navbar() {
 
             {/* Admin/Staff Specific Links */}
             {(user.role.toLowerCase() === 'admin' || user.role.toLowerCase() === 'staff') && (
-              <Link href="/admin" className={pathname === '/admin' ? styles.active : ''}>
-                Admin Dashboard
-              </Link>
+              <>
+                <Link href="/admin" className={pathname === '/admin' ? styles.active : ''}>
+                  Admin Dashboard
+                </Link>
+                <Link href="/staff" className={pathname === '/staff' ? styles.active : ''}>
+                  Staff Portal
+                </Link>
+              </>
             )}
 
             {/* Passenger Specific Links */}
@@ -63,6 +68,9 @@ export default function Navbar() {
                 </Link>
                 <Link href="/flights" className={pathname === '/flights' ? styles.active : ''}>
                   Search Flights
+                </Link>
+                <Link href="/check-in" className={pathname === '/check-in' ? styles.active : ''}>
+                  Online Check-In
                 </Link>
                 <Link href="/baggage-tracking" className={pathname === '/baggage-tracking' ? styles.active : ''}>
                   Track Baggage
@@ -80,6 +88,9 @@ export default function Navbar() {
           </>
         ) : (
           <>
+            <Link href="/check-in" className={pathname === '/check-in' ? styles.active : ''}>
+              Online Check-In
+            </Link>
             <Link href="/login" className={styles.loginLink}>Login</Link>
             <Link href="/register" className={styles.registerLink}>Register</Link>
           </>

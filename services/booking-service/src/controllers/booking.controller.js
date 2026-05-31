@@ -15,6 +15,7 @@ exports.createBooking = async (req, res, next) => {
     // Execute the Saga Pattern
     const result = await BookingSaga.executeBookingFlow({
       userId,
+      email: req.user ? req.user.email : null,
       flightId,
       seatId,
       price,
@@ -99,6 +100,42 @@ exports.cancelBooking = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Booking cancelled successfully (Refund initiated)',
+      data: updatedBooking
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.checkInBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { passportNumber } = req.body;
+    
+    if (!passportNumber || !/^[A-Z0-9]{8,9}$/i.test(passportNumber)) {
+      return res.status(400).json({ success: false, message: 'Invalid passport number format.' });
+    }
+
+    const booking = await BookingModel.getBookingById(id);
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+
+    // RBAC check: only the passenger who owns the booking (or staff/admin) can check in
+    if (req.user && req.user.role === 'passenger' && booking.userId !== req.user.userId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized to check-in this booking' });
+    }
+
+    if (booking.status !== 'CONFIRMED') {
+      return res.status(400).json({ success: false, message: 'Only CONFIRMED bookings can be checked in.' });
+    }
+
+    const updatedBooking = await BookingModel.updateBookingStatus(id, 'CHECKED_IN');
+    
+    res.status(200).json({
+      success: true,
+      message: 'Check-in successful!',
       data: updatedBooking
     });
   } catch (error) {

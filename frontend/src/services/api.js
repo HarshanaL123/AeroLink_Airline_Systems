@@ -112,6 +112,16 @@ export const bookingAPI = {
   cancelBooking: async (bookingId) => {
     const response = await api.put(`${bookingAPI.baseURL}/${bookingId}/cancel`);
     return response.data;
+  },
+
+  getBooking: async (bookingId) => {
+    const response = await api.get(`${bookingAPI.baseURL}/${bookingId}`);
+    return response.data;
+  },
+
+  checkInBooking: async (bookingId, passportNumber) => {
+    const response = await api.put(`${bookingAPI.baseURL}/${bookingId}/check-in`, { passportNumber });
+    return response.data;
   }
 };
 
@@ -130,6 +140,11 @@ export const baggageAPI = {
 
   registerBaggage: async (baggageData) => {
     const response = await api.post(`${baggageAPI.baseURL}`, baggageData);
+    return response.data;
+  },
+
+  updateBaggageStatus: async (baggageId, status) => {
+    const response = await api.patch(`${baggageAPI.baseURL}/${baggageId}/status`, { status });
     return response.data;
   }
 };

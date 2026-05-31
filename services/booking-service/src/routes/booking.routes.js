@@ -11,5 +11,6 @@ router.post('/', bookingController.createBooking);
 router.get('/user/:userId', bookingController.getUserBookings);
 router.get('/:id', bookingController.getBooking);
 router.put('/:id/cancel', bookingController.cancelBooking);
+router.put('/:id/check-in', bookingController.checkInBooking);
 
 module.exports = router;
