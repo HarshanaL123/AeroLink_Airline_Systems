@@ -27,7 +27,26 @@ app.use(cors({
 
 app.use(express.json());
 app.use(sanitizeMiddleware); // Prevent XSS Attacks
-app.use(morgan('combined'));
+// Add Correlation ID Middleware
+app.use((req, res, next) => {
+  req.correlationId = req.headers['x-correlation-id'] || req.headers['x-amzn-trace-id'] || require('crypto').randomUUID();
+  res.setHeader('x-correlation-id', req.correlationId);
+  next();
+});
+
+// JSON Structured Logging for HTTP Requests
+morgan.token('correlation-id', function (req, res) { return req.correlationId });
+app.use(morgan(function (tokens, req, res) {
+  return JSON.stringify({
+    service: 'auth-service',
+    method: tokens.method(req, res),
+    url: tokens.url(req, res),
+    status: tokens.status(req, res),
+    response_time: tokens['response-time'](req, res) + ' ms',
+    correlation_id: tokens['correlation-id'](req, res),
+    timestamp: new Date().toISOString()
+  });
+}));
 
 // Health Check Endpoint (Enhancement #2)
 app.get('/health', (req, res) => {

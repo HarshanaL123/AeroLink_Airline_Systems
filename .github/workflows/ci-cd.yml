@@ -47,23 +47,49 @@ jobs:
         run: npm test
 
   # ============================================
-  # Job 2: Build Docker Images
+  # Job 2: Build & Push Docker Images
   # ============================================
-  # build:
-  #   name: Build & Push Docker Images
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - Will be configured on Day 12
+  build:
+    name: Build & Push
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        service:
+          - auth-service
+          - flight-service
+          - booking-service
+          - baggage-service
+          - notification-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd services/${{ matrix.service }}
+          docker build -t $ECR_REGISTRY/aerolink-${{ matrix.service }}:$IMAGE_TAG .
+          # Uncomment next line to push dynamically to ECR
+          # docker push $ECR_REGISTRY/aerolink-${{ matrix.service }}:$IMAGE_TAG
 
   # ============================================
-  # Job 3: Deploy to AWS
+  # Job 3: GitOps Deployment Trigger (ArgoCD)
   # ============================================
-  # deploy:
-  #   name: Deploy to ECS
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - Will be configured on Day 12
+  # This section would dynamically update the k8s/ deployment manifests 
+  # with the new IMAGE_TAG, commit it back to the repo, and let ArgoCD sync.

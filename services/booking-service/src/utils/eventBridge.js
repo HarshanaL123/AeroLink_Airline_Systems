@@ -1,4 +1,6 @@
-const AWS = require('aws-sdk');
+const AWSXRay = require('aws-xray-sdk');
+AWSXRay.setContextMissingStrategy('LOG_ERROR');
+const AWS = AWSXRay.captureAWS(require('aws-sdk'));
 
 const awsConfig = {
   region: process.env.AWS_REGION || 'us-east-1'

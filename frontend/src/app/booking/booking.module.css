@@ -289,9 +289,23 @@ select.input option {
 
 .seatSelected {
   background-color: var(--accent-blue);
-  color: white;
-  box-shadow: 0 0 15px var(--accent-glow);
+  background: rgba(255, 255, 255, 1);
+  color: #0f172a;
+  border-color: #fff;
   transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  z-index: 2;
+}
+
+.seatBusiness {
+  background: rgba(255, 215, 0, 0.2); /* Gold tint for business class */
+  border-color: rgba(255, 215, 0, 0.6);
+  color: #e2e8f0;
+}
+
+.seatBusiness:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 .seatBooked {

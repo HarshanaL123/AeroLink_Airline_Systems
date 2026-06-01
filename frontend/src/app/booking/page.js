@@ -96,10 +96,14 @@ function BookingFlow() {
     setError(null);
 
     try {
+      // Find the currently selected seat to get its multiplier
+      const seatObj = seats.find(s => s.seatId === selectedSeat);
+      const calculatedPrice = flight.price * (seatObj?.priceMultiplier || 1.0);
+
       const response = await bookingAPI.createBooking({
         flightId,
         seatId: selectedSeat,
-        price: flight.price,
+        price: calculatedPrice,
         paymentToken
       });
 
@@ -141,7 +145,7 @@ function BookingFlow() {
             </div>
             <div className={styles.receiptRow}>
               <span>Total Paid:</span>
-              <strong>${flight.price}</strong>
+              <strong>${bookingDetails.price || flight.price}</strong>
             </div>
           </div>
 
@@ -168,7 +172,7 @@ function BookingFlow() {
             <h2>{flight?.arrivalAirport}</h2>
           </div>
           <div className={styles.summaryPrice}>
-            Total: <strong>${flight?.price}</strong>
+            Total: <strong>${selectedSeat ? (flight?.price * (seats.find(s => s.seatId === selectedSeat)?.priceMultiplier || 1.0)) : flight?.price}</strong>
           </div>
         </div>
 
@@ -195,9 +199,10 @@ function BookingFlow() {
                     onClick={() => setSelectedSeat(seat.seatId)}
                     className={`${styles.seatButton} ${
                       isSelected ? styles.seatSelected : 
-                      isAvailable ? styles.seatAvailable : styles.seatBooked
+                      !isAvailable ? styles.seatBooked : 
+                      seat.class === 'BUSINESS' ? styles.seatBusiness : styles.seatAvailable
                     }`}
-                    title={isAvailable ? `Select Seat ${seat.seatId}` : `Seat ${seat.seatId} is taken`}
+                    title={isAvailable ? `Select ${seat.class} Seat ${seat.seatId} ($${flight?.price * (seat.priceMultiplier || 1.0)})` : `Seat ${seat.seatId} is taken`}
                   >
                     {seat.seatId}
                   </button>
@@ -225,7 +230,7 @@ function BookingFlow() {
             className={styles.submitButton}
             disabled={isProcessing || !selectedSeat}
           >
-            {isProcessing ? 'Processing Payment (Saga)...' : selectedSeat ? `Pay $${flight?.price} & Confirm ${selectedSeat}` : 'Select a seat to proceed'}
+            {isProcessing ? 'Processing Payment (Saga)...' : selectedSeat ? `Pay $${flight?.price * (seats.find(s => s.seatId === selectedSeat)?.priceMultiplier || 1.0)} & Confirm ${selectedSeat}` : 'Select a seat to proceed'}
           </button>
         </form>
       </div>

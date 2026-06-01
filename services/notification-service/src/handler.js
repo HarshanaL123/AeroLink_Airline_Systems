@@ -2,9 +2,12 @@ const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
 const { randomUUID } = require('crypto');
+const AWSXRay = require('aws-xray-sdk');
+
+AWSXRay.setContextMissingStrategy('LOG_ERROR');
 
 // Configure AWS Services (Using AWS SDK v3 for Node.js 20+)
-const sesClient = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const sesClient = AWSXRay.captureAWSv3Client(new SESClient({ region: process.env.AWS_REGION || 'us-east-1' }));
 
 const dynamoDbConfig = { region: process.env.AWS_REGION || 'us-east-1' };
 if (process.env.DYNAMODB_ENDPOINT) {
@@ -15,7 +18,7 @@ if (process.env.DYNAMODB_ENDPOINT) {
   };
 }
 
-const dynamoDbClient = new DynamoDBClient(dynamoDbConfig);
+const dynamoDbClient = AWSXRay.captureAWSv3Client(new DynamoDBClient(dynamoDbConfig));
 const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
 
 const TableName = process.env.NOTIFICATIONS_TABLE || 'Notifications';
