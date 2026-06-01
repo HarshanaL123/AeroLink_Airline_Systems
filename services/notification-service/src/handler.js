@@ -6,8 +6,11 @@ const AWSXRay = require('aws-xray-sdk');
 
 AWSXRay.setContextMissingStrategy('LOG_ERROR');
 
+const isTestEnv = process.env.NODE_ENV === 'test';
+
 // Configure AWS Services (Using AWS SDK v3 for Node.js 20+)
-const sesClient = AWSXRay.captureAWSv3Client(new SESClient({ region: process.env.AWS_REGION || 'us-east-1' }));
+let rawSesClient = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const sesClient = isTestEnv ? rawSesClient : AWSXRay.captureAWSv3Client(rawSesClient);
 
 const dynamoDbConfig = { region: process.env.AWS_REGION || 'us-east-1' };
 if (process.env.DYNAMODB_ENDPOINT) {
@@ -18,7 +21,8 @@ if (process.env.DYNAMODB_ENDPOINT) {
   };
 }
 
-const dynamoDbClient = AWSXRay.captureAWSv3Client(new DynamoDBClient(dynamoDbConfig));
+let rawDynamoClient = new DynamoDBClient(dynamoDbConfig);
+const dynamoDbClient = isTestEnv ? rawDynamoClient : AWSXRay.captureAWSv3Client(rawDynamoClient);
 const dynamoDb = DynamoDBDocumentClient.from(dynamoDbClient);
 
 const TableName = process.env.NOTIFICATIONS_TABLE || 'Notifications';
