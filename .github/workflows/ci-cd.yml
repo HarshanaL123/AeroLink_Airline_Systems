@@ -61,7 +61,6 @@ jobs:
           - flight-service
           - booking-service
           - baggage-service
-          - notification-service
 
     steps:
       - name: Checkout code
