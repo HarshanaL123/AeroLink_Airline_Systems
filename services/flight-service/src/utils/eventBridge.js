@@ -1,6 +1,7 @@
 const AWSXRay = require('aws-xray-sdk');
 AWSXRay.setContextMissingStrategy('LOG_ERROR');
-const AWS = AWSXRay.captureAWS(require('aws-sdk'));
+const rawAWS = require('aws-sdk');
+const AWS = process.env.NODE_ENV === 'test' ? rawAWS : AWSXRay.captureAWS(rawAWS);
 
 // Configure EventBridge (In local development we just mock it, but we prepare the code for prod)
 const eventBridge = new AWS.EventBridge({
