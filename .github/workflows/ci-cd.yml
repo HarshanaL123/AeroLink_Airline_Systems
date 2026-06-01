@@ -47,7 +47,7 @@ jobs:
         run: npm test
 
   # ============================================
-  # Job 2: Build & Push Docker Images
+  # Job 2: Build Docker Images (CI Demonstration)
   # ============================================
   build:
     name: Build & Push
@@ -67,29 +67,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build Docker Image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           cd services/${{ matrix.service }}
-          docker build -t $ECR_REGISTRY/aerolink-${{ matrix.service }}:$IMAGE_TAG .
-          # Uncomment next line to push dynamically to ECR
-          # docker push $ECR_REGISTRY/aerolink-${{ matrix.service }}:$IMAGE_TAG
+          echo "Building Docker Image for ${{ matrix.service }}..."
+          docker build -t aerolink-${{ matrix.service }}:$IMAGE_TAG .
+          echo "✅ Successfully built aerolink-${{ matrix.service }}:$IMAGE_TAG"
 
   # ============================================
   # Job 3: GitOps Deployment Trigger (ArgoCD)
   # ============================================
-  # This section would dynamically update the k8s/ deployment manifests 
-  # with the new IMAGE_TAG, commit it back to the repo, and let ArgoCD sync.
+  # This section dynamically updates the k8s/ deployment manifests 
+  # with the new IMAGE_TAG, committing it back to the repo so ArgoCD can sync.
