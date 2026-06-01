@@ -13,3 +13,8 @@ variable "dlq_names" {
   type        = list(string)
   default     = []
 }
+
+variable "lambda_function_name" {
+  description = "The name of the Notification Service Lambda function to monitor"
+  type        = string
+}

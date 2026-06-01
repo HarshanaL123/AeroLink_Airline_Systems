@@ -297,9 +297,10 @@ module "lambda_eu" {
 
 # CloudWatch Monitoring - US
 module "cloudwatch" {
-  source      = "./modules/cloudwatch"
-  environment = var.environment
-  alert_email = var.alert_email
+  source               = "./modules/cloudwatch"
+  environment          = var.environment
+  alert_email          = var.alert_email
+  lambda_function_name = "AeroLink-NotificationService-US-${var.environment}"
   dlq_names = [
     module.sqs_booking.dlq_name,
     module.sqs_baggage.dlq_name,
@@ -309,9 +310,10 @@ module "cloudwatch" {
 
 # CloudWatch Monitoring - EU
 module "cloudwatch_eu" {
-  source      = "./modules/cloudwatch"
-  environment = var.environment
-  alert_email = var.alert_email
+  source               = "./modules/cloudwatch"
+  environment          = var.environment
+  alert_email          = var.alert_email
+  lambda_function_name = "AeroLink-NotificationService-EU-${var.environment}"
   providers = {
     aws = aws.eu
   }
