@@ -17,7 +17,7 @@ spec:
       containers:
         - name: docs-service
           # The image tag will be updated dynamically by ArgoCD later
-          image: 975050201476.dkr.ecr.us-east-1.amazonaws.com/aerolink-docs-service-dev:latest
+          image: 012549289252.dkr.ecr.us-east-1.amazonaws.com/aerolink-docs-service-dev:latest
           ports:
             - containerPort: 80
           resources:
