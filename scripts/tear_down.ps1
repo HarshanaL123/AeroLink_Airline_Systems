@@ -7,10 +7,12 @@ Write-Host "========================================================" -Foregroun
 # 1. Delete Kubernetes Resources (CRITICAL to release ALBs before Terraform runs)
 Write-Host "`n[1/3] Deleting Kubernetes Resources in EU Cluster..." -ForegroundColor Cyan
 kubectl config use-context aerolink-eu
+kubectl delete application aerolink-microservices -n argocd --ignore-not-found
 kubectl delete -f k8s/
 
 Write-Host "`n[2/3] Deleting Kubernetes Resources in US Cluster..." -ForegroundColor Cyan
 kubectl config use-context aerolink-us
+kubectl delete application aerolink-microservices -n argocd --ignore-not-found
 kubectl delete -f k8s/
 
 Write-Host "`nWaiting 30 seconds for AWS Load Balancers to fully unbind..." -ForegroundColor Cyan

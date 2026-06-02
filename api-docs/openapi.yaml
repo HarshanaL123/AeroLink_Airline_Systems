@@ -9,6 +9,8 @@ info:
     name: AeroLink Development Team
 
 servers:
+  - url: /api/v1
+    description: AeroLink API (Cloud Load Balancer)
   - url: http://localhost:3001/api/v1
     description: Auth Service (Local)
   - url: http://localhost:3002/api/v1
