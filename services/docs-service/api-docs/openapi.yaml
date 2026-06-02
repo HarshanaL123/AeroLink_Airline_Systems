@@ -149,6 +149,8 @@ paths:
     get:
       tags: [Baggage]
       summary: Get baggage tracking status
+      security:
+        - BearerAuth: []
       parameters:
         - in: path
           name: baggageId
