@@ -36,6 +36,7 @@ foreach ($service in $Services) {
     
     if ($service -eq "docs-service") {
         Write-Host "Copying api-docs folder into docs-service for Docker context..." -ForegroundColor Yellow
+        if (Test-Path "services/docs-service/api-docs") { Remove-Item -Path "services/docs-service/api-docs" -Recurse -Force }
         Copy-Item -Path "api-docs" -Destination "services/docs-service/api-docs" -Recurse -Force
     }
 
