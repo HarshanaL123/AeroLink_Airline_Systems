@@ -99,6 +99,47 @@ paths:
         '401':
           description: Unauthorized
 
+  /flights:
+    get:
+      tags: [Flights]
+      summary: Search available flights
+      parameters:
+        - in: query
+          name: origin
+          schema:
+            type: string
+        - in: query
+          name: destination
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of flights retrieved successfully
+          
+  /bookings:
+    post:
+      tags: [Bookings]
+      summary: Create a new flight booking
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Booking created successfully
+
+  /baggage/{baggageId}:
+    get:
+      tags: [Baggage]
+      summary: Get baggage tracking status
+      parameters:
+        - in: path
+          name: baggageId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Baggage status retrieved successfully
+
 components:
   securitySchemes:
     BearerAuth:
