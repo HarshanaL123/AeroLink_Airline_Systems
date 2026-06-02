@@ -3,29 +3,29 @@
 # Installs ArgoCD and Configures the Multi-Region Automated Deployment Pipeline
 # =============================================================================
 
-Write-Host "🚀 Setting up Enterprise GitOps (ArgoCD) pipeline..." -ForegroundColor Cyan
+Write-Host "Setting up Enterprise GitOps (ArgoCD) pipeline..." -ForegroundColor Cyan
 
 # 1. Install ArgoCD
-Write-Host "📦 Installing ArgoCD to Kubernetes Cluster..." -ForegroundColor Yellow
+Write-Host "[1/5] Installing ArgoCD to Kubernetes Cluster..." -ForegroundColor Yellow
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 # 2. Wait for ArgoCD Server to be ready
-Write-Host "⏳ Waiting for ArgoCD pods to spin up (this may take 1-2 minutes)..." -ForegroundColor Yellow
+Write-Host "[2/5] Waiting for ArgoCD pods to spin up (this may take 1-2 minutes)..." -ForegroundColor Yellow
 kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
 
 # 3. Expose ArgoCD Server Locally
-Write-Host "🌐 Exposing ArgoCD Server on localhost:8080..." -ForegroundColor Yellow
+Write-Host "[3/5] Exposing ArgoCD Server on localhost:8080..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit -Command kubectl port-forward svc/argocd-server -n argocd 8080:443"
 
 # 4. Get Initial Admin Password
-Write-Host "⏳ Extracting ArgoCD Admin Password..." -ForegroundColor Yellow
+Write-Host "[4/5] Extracting ArgoCD Admin Password..." -ForegroundColor Yellow
 $argocdPassword = kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | Foreach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
-Write-Host "🔑 ArgoCD Admin Password: $argocdPassword" -ForegroundColor Green
-Write-Host "👤 Username: admin" -ForegroundColor Green
+Write-Host "--> ArgoCD Admin Password: $argocdPassword" -ForegroundColor Green
+Write-Host "--> Username: admin" -ForegroundColor Green
 
 # 5. Apply the AeroLink GitOps Application
-Write-Host "🔗 Linking EKS Cluster to GitHub Repository for automated deployments..." -ForegroundColor Yellow
+Write-Host "[5/5] Linking EKS Cluster to GitHub Repository for automated deployments..." -ForegroundColor Yellow
 
 $argoAppYaml = @"
 apiVersion: argoproj.io/v1alpha1
@@ -50,6 +50,6 @@ spec:
 
 $argoAppYaml | kubectl apply -f -
 
-Write-Host "✅ GitOps Pipeline successfully initialized!" -ForegroundColor Green
+Write-Host "[SUCCESS] GitOps Pipeline successfully initialized!" -ForegroundColor Green
 Write-Host "ArgoCD is now watching your repository. Every time you push code, EKS will instantly update." -ForegroundColor Cyan
 Write-Host "Open a browser and navigate to https://localhost:8080 to view the GitOps Dashboard." -ForegroundColor Magenta

@@ -15,6 +15,13 @@ spec:
   rules:
     - http:
         paths:
+          - path: /api/docs
+            pathType: Prefix
+            backend:
+              service:
+                name: docs-service
+                port:
+                  number: 80
           - path: /api/v1/auth
             pathType: Prefix
             backend:

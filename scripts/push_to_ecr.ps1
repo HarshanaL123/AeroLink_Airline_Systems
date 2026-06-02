@@ -22,7 +22,8 @@ $Services = @(
     "flight-service",
     "booking-service",
     "baggage-service",
-    "frontend"
+    "frontend",
+    "docs-service"
 )
 
 foreach ($service in $Services) {
@@ -33,6 +34,11 @@ foreach ($service in $Services) {
     Write-Host "----------------------------------------" -ForegroundColor Yellow
     Write-Host "Building Docker image for $service..." -ForegroundColor Cyan
     
+    if ($service -eq "docs-service") {
+        Write-Host "Copying api-docs folder into docs-service for Docker context..." -ForegroundColor Yellow
+        Copy-Item -Path "api-docs" -Destination "services/docs-service/api-docs" -Recurse -Force
+    }
+
     $ContextDir = if ($service -eq "frontend") { "frontend" } else { "services/$service" }
     
     if (-not (Test-Path $ContextDir)) {

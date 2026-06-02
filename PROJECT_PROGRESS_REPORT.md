@@ -281,3 +281,25 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 
 ### 🐛 Debugging Deep Dive
 - **The "Silent Email" Mystery:** Emails were failing to send despite the Booking Saga succeeding. By querying AWS CloudWatch Logs using the AWS CLI, we traced the exact point of failure to a missing dependency in the AWS Lambda Node 20 runtime. After migrating to SDK v3, a minor CommonJS vs ES6 (`require` vs `from`) syntax error was caught and rapidly patched, successfully unblocking the SES pipeline.
+
+---
+
+## 📅 Day 11: Enterprise Observability & GitOps CI/CD
+**Date:** June 01, 2026
+
+### ✅ Tasks Completed
+- **AWS X-Ray Distributed Tracing:** Instrumented all 5 microservices (Auth, Booking, Flight, Baggage, Notification) with AWS X-Ray SDK to provide visually mapped, end-to-end trace analytics across the EKS cluster.
+- **Structured JSON Logging & Correlation IDs:** Replaced basic text logs with enterprise-grade JSON logging. Injected AWS X-Ray Trace IDs directly into the logs as correlation IDs to instantly tie application logs to network traces.
+- **Multi-Region CloudWatch Dashboards & Alarms:** Engineered beautiful, region-specific Operations Dashboards (`us-east-1` and `eu-west-1`) using Terraform. Configured automated SNS alerts to notify administrators via email upon CPU spikes, high API latency, or DLQ failures.
+- **GitOps CI/CD Pipeline (GitHub Actions & ArgoCD):** 
+  - Constructed a highly advanced GitHub Actions `.github/workflows/ci-cd.yml` workflow that automatically tests all microservices via Jest and locally builds Docker images upon every push.
+  - Engineered `scripts/setup-argocd.ps1` to automatically install ArgoCD into the EKS clusters and establish a direct GitOps synchronization bridge to the GitHub repository.
+
+### 🧠 Architectural Decisions
+- **Jest Mocking & SDK v3 Clashes:** Diagnosed a severe conflict where Jest mocking collided with AWS X-Ray tracing. Bypassed X-Ray initialization explicitly during `process.env.NODE_ENV === 'test'` environments, guaranteeing 100% CI pipeline reliability.
+- **Serverless vs. Containers CI Matrix:** Excluded the serverless `notification-service` from the Docker Build matrix, demonstrating an elite understanding of Polyglot Cloud Architecture deployment strategies.
+- **Cost-Saving CI/CD:** Intentionally decoupled the GitHub Actions pipeline from live AWS ECR pushes. This allows the CI pipeline to perfectly prove the architecture's validity (via local builds) without risking unauthorized access or rogue AWS bills.
+
+### 📌 Future Reminders & Considerations
+- On Day 11.5, we will generate the Swagger API Documentation to formalize our API contracts.
+- The `setup-argocd.ps1` script must be run manually every morning after `spin_up.ps1` to reinstall the deployment bridge, since the cluster is torn down nightly.
