@@ -11,6 +11,7 @@ variable "repositories" {
     "aerolink-flight-service",
     "aerolink-booking-service",
     "aerolink-baggage-service",
-    "aerolink-frontend"
+    "aerolink-frontend",
+    "aerolink-docs-service"
   ]
 }

@@ -71,6 +71,9 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          if [ "${{ matrix.service }}" = "docs-service" ]; then
+            cp -r api-docs services/docs-service/api-docs
+          fi
           cd services/${{ matrix.service }}
           echo "Building Docker Image for ${{ matrix.service }}..."
           docker build -t aerolink-${{ matrix.service }}:$IMAGE_TAG .
