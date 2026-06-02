@@ -15,6 +15,9 @@ const swaggerDocument = YAML.load(path.join(__dirname, 'api-docs', 'openapi.yaml
 app.get('/health', (req, res) => {
   res.status(200).json({ service: 'docs-service', status: 'healthy', timestamp: new Date().toISOString() });
 });
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({ service: 'docs-service', status: 'healthy', timestamp: new Date().toISOString(), uptime: process.uptime(), version: '1.0.0' });
+});
 
 // Swagger UI configuration
 // We serve it at /api/docs to match the Ingress routing

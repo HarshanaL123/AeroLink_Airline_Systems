@@ -124,6 +124,23 @@ paths:
       summary: Create a new flight booking
       security:
         - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [flightId, seatId, paymentToken]
+              properties:
+                flightId:
+                  type: string
+                  example: FL-CMB-DXB-001
+                seatId:
+                  type: string
+                  example: 1A
+                paymentToken:
+                  type: string
+                  example: tok_visa
       responses:
         '201':
           description: Booking created successfully
