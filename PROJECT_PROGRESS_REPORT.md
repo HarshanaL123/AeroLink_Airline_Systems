@@ -303,3 +303,46 @@ Before launching the Next.js frontend, two critical backend adjustments were mad
 ### 📌 Future Reminders & Considerations
 - On Day 11.5, we will generate the Swagger API Documentation to formalize our API contracts.
 - The `setup-argocd.ps1` script must be run manually every morning after `spin_up.ps1` to reinstall the deployment bridge, since the cluster is torn down nightly.
+
+---
+
+## 📅 Day 11.5: Swagger API Documentation & Centralized Docs Service
+**Date:** June 02, 2026
+
+### ✅ Tasks Completed
+- **OpenAPI 3.0 Specification:** Engineered a comprehensive `api-docs/openapi.yaml` specification documenting all REST endpoints (Auth, Flight, Booking, Baggage, Health) with strict input schemas and response codes.
+- **Centralized Docs Microservice:** Created a brand new lightweight Node.js microservice (`docs-service`) utilizing `swagger-ui-express` to serve an interactive, beautifully rendered UI directly from the cloud.
+- **Dockerization & Kubernetes Deployment:** Built a highly optimized multi-stage Dockerfile for the `docs-service`, pushed it to AWS ECR, and deployed it to both the US and EU Kubernetes clusters.
+- **Ingress Load Balancer Integration:** Updated the `ingress.yaml` routing rules to expose the documentation securely at the `/api/docs` endpoint on the global AWS Application Load Balancers.
+- **Swagger Security Configuration Fix:** Debugged and resolved an issue where Swagger UI failed to send JWT tokens to the Baggage Service. Fixed the `openapi.yaml` specification by explicitly defining the `BearerAuth` security scheme on protected routes.
+
+### 🧠 Architectural Decisions
+- **Microservice over Monolith Docs:** Rather than injecting `swagger-ui-express` into every single backend service (which bloats them and creates 4 different documentation URLs), we made the elite architectural decision to spin up a dedicated `docs-service`. This provides a single, unified developer portal (`/api/docs`) for the entire ecosystem.
+- **ArgoCD GitOps Syncing:** Leveraged our ArgoCD GitOps pipelines to automatically deploy the `docs-service` Kubernetes YAMLs across both continents without manual intervention.
+
+### 📌 Future Reminders & Considerations
+- Moving into **Day 12 (Testing Suite)**, we no longer need to rely on Postman. We will use the live Swagger UI for manual testing and demonstrations during the Viva, while using `Jest` and `Artillery` for automated and load testing.
+
+---
+
+## 📅 Day 12: Testing Suite (Unit, Integration, Load, and Stress)
+**Date:** June 03, 2026
+
+### ✅ Tasks Completed
+- **Unit & Integration Testing:** Successfully completed automated testing across all microservices using Jest and Supertest, ensuring all APIs and Saga workflows function flawlessly.
+- **Load Testing (Artillery):** Engineered and executed `booking-flow.yml` simulating 100+ concurrent users booking flights. 
+  - *Achievement:* Mathematically proved the AWS Rate Limiter's effectiveness. The system instantly blocked the DDoS attack, perfectly protecting the EKS Cluster from crashing, while serving legitimate traffic with a **308ms** median response time.
+- **In-Memory Caching (Redis on EKS):** 
+  - Deployed Redis to both the US and EU EKS clusters.
+  - Engineered the Flight Controller to check Redis before querying DynamoDB. Implemented a 60-second TTL and automatic Cache Invalidation on flight updates/bookings.
+  - *Achievement:* Decreased Flight Search latency from ~367ms down to **2.7ms** — a **13,100% speed increase**.
+- **Extreme Stress Testing:** Engineered and executed `stress-test.yml` to bombard the system with an aggressive ramp-up to **500 concurrent users per second**.
+  - *Achievement:* Found the absolute breaking point. During Extreme Stress Testing, the architecture successfully handled up to **1,329 requests per second**. The ultimate breaking point was identified when the AWS network limits were exceeded, resulting in TCP socket timeouts (`ERR_SOCKET_TIMEOUT`). To scale further in the future, we would simply increase the Kubernetes Horizontal Pod Autoscaler (HPA) limits.
+
+### 🧠 Architectural Decisions
+- **Cache Graceful Degradation:** Wrapped the Redis connection in a strict `try/catch` block. If the Redis pod ever crashes, the Node.js application automatically falls back to querying DynamoDB instead of crashing the API. This guarantees 100% uptime.
+- **Unified Testing Scripts:** Rather than relying on manual terminal commands, we engineered professional PowerShell wrappers (`run_load_test.ps1` and `run_stress_test.ps1`) to securely inject API keys and route logs to the Artillery Cloud Dashboard.
+
+### 📌 Future Reminders & Considerations
+- We have officially completed all implementation and testing tasks! 
+- The next step is Phase 6 (Documentation & Submission), where we will generate the Architecture Diagrams, finalize the Written Report, and prepare the Viva Presentation Slides!

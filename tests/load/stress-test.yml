@@ -1,0 +1,42 @@
+config:
+  target: "{{ $processEnvironment.TARGET_URL }}" # Set via env var, e.g., TARGET_URL=http://localhost:4000
+  phases:
+    - duration: 30
+      arrivalRate: 50
+      name: "Phase 1: Warm up (50 req/sec)"
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 500
+      name: "Phase 2: Ramp to 500 concurrent users per second"
+    - duration: 60
+      arrivalRate: 500
+      name: "Phase 3: Sustained Extreme Load (The Breaking Point)"
+  environments:
+    production:
+      target: "{{ $processEnvironment.TARGET_URL }}"
+  variables:
+    departureAirport:
+      - "CMB"
+      - "DXB"
+      - "LHR"
+      - "JFK"
+      - "SIN"
+    arrivalAirport:
+      - "DXB"
+      - "CMB"
+      - "JFK"
+      - "LHR"
+      - "SYD"
+    date:
+      - "2026-06-15"
+      - "2026-06-16"
+      - "2026-06-17"
+
+scenarios:
+  - name: "Extreme DDOS Simulation (Stress Test)"
+    flow:
+      - loop:
+        - get:
+            url: "/api/v1/flights/search?departureAirport={{ departureAirport }}&arrivalAirport={{ arrivalAirport }}&date={{ date }}"
+        - think: 1
+        count: 5

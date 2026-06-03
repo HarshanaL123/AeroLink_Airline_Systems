@@ -2,6 +2,37 @@ const { v4: uuidv4 } = require('uuid');
 const Flight = require('../models/Flight');
 const Seat = require('../models/Seat');
 const { publishEvent } = require('../utils/eventBridge');
+const { createClient } = require('redis');
+
+// Initialize Redis Client for Caching
+let redisClient = null;
+(async () => {
+  try {
+    if (process.env.REDIS_URL) {
+      redisClient = createClient({ url: process.env.REDIS_URL });
+      redisClient.on('error', (err) => console.warn('[Redis Error]', err));
+      await redisClient.connect();
+      console.log('✅ Connected to Redis cache (Flight Search)');
+    }
+  } catch (error) {
+    console.error('Failed to connect to Redis, bypassing cache gracefully', error);
+  }
+})();
+
+// Helper to Invalidate Cache
+const clearFlightCache = async () => {
+  if (redisClient && redisClient.isReady) {
+    try {
+      const keys = await redisClient.keys('flights:search:*');
+      if (keys.length > 0) {
+        await redisClient.del(keys);
+        console.log(`[CACHE INVALIDATED] Cleared ${keys.length} flight search cache entries.`);
+      }
+    } catch (err) {
+      console.warn('[CACHE INVALIDATE ERROR]', err);
+    }
+  }
+};
 
 // @desc    Create a new flight
 // @route   POST /api/v1/flights
@@ -34,6 +65,9 @@ exports.createFlight = async (req, res, next) => {
     // Initialize all seats for the new flight
     await Seat.initializeSeats(newFlight.flightId, newFlight.totalSeats);
 
+    // Invalidate Cache
+    await clearFlightCache();
+
     // Publish event
     await publishEvent('aerolink.flight', 'flight.created', newFlight);
 
@@ -54,8 +88,35 @@ exports.searchFlights = async (req, res, next) => {
     if (departureAirport) departureAirport = departureAirport.toUpperCase();
     if (arrivalAirport) arrivalAirport = arrivalAirport.toUpperCase();
 
+    // 1. Check Redis Cache
+    const cacheKey = `flights:search:${departureAirport || 'ANY'}:${arrivalAirport || 'ANY'}:${date || 'ANY'}:${minPrice || 'ANY'}:${maxPrice || 'ANY'}`;
+    
+    if (redisClient && redisClient.isReady) {
+      try {
+        const cachedFlights = await redisClient.get(cacheKey);
+        if (cachedFlights) {
+          console.log(`[CACHE HIT] Returning flight data from Redis for ${cacheKey}`);
+          return res.status(200).json({ success: true, count: JSON.parse(cachedFlights).length, data: JSON.parse(cachedFlights), cached: true });
+        }
+      } catch (redisErr) {
+        console.warn('[REDIS GET ERROR] Bypassing cache', redisErr);
+      }
+    }
+
+    // 2. Fetch from DynamoDB if Cache Miss
+    console.log(`[CACHE MISS] Fetching flight data from DynamoDB for ${cacheKey}`);
     const flights = await Flight.search({ departureAirport, arrivalAirport, date, minPrice, maxPrice });
-    res.status(200).json({ success: true, count: flights.length, data: flights });
+    
+    // 3. Save back to Cache (60 second TTL)
+    if (redisClient && redisClient.isReady) {
+      try {
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(flights));
+      } catch (redisErr) {
+        console.warn('[REDIS SET ERROR] Bypassing cache set', redisErr);
+      }
+    }
+
+    res.status(200).json({ success: true, count: flights.length, data: flights, cached: false });
   } catch (error) {
     console.error('[SEARCH FLIGHTS ERROR]', error);
     next(error);
@@ -103,6 +164,9 @@ exports.updateFlight = async (req, res, next) => {
 
     const updatedFlight = await Flight.update(req.params.id, req.body);
     
+    // Invalidate Cache
+    await clearFlightCache();
+
     // Publish event
     await publishEvent('aerolink.flight', 'flight.updated', updatedFlight);
 
@@ -124,6 +188,10 @@ exports.deleteFlight = async (req, res, next) => {
     }
 
     await Flight.delete(req.params.id);
+    
+    // Invalidate Cache
+    await clearFlightCache();
+    
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     console.error('[DELETE FLIGHT ERROR]', error);
@@ -163,6 +231,9 @@ exports.updateSeat = async (req, res, next) => {
     } else if (status === 'AVAILABLE') {
       await Flight.updateAvailableSeats(req.params.id, 1);
     }
+
+    // Invalidate Cache because available seats changed
+    await clearFlightCache();
 
     // Publish event so Booking Service knows the seat is no longer available
     await publishEvent('aerolink.flight', 'seat.updated', updatedSeat);

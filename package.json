@@ -22,5 +22,9 @@
     "node": ">=22.0.0"
   },
   "author": "AeroLink Development Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
 }

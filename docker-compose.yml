@@ -31,6 +31,22 @@ services:
       start_period: 5s
 
   # =========================================
+  # Cache: Redis (In-Memory Database)
+  # =========================================
+  redis-cache:
+    image: redis:alpine
+    container_name: aerolink-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aerolink-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # =========================================
   # DynamoDB Table Creator (runs once, then exits)
   # =========================================
   dynamodb-setup:
@@ -163,9 +179,12 @@ services:
       - EVENT_BUS_NAME=aerolink-event-bus
       - RATE_LIMIT_WINDOW_MS=900000
       - RATE_LIMIT_MAX_REQUESTS=100
+      - REDIS_URL=redis://redis-cache:6379
     depends_on:
       dynamodb-setup:
         condition: service_completed_successfully
+      redis-cache:
+        condition: service_healthy
     networks:
       - aerolink-network
     restart: unless-stopped

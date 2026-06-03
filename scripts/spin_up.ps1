@@ -15,7 +15,11 @@ terraform init
 terraform apply -auto-approve
 Set-Location -Path ".."
 
-# 1.5. Push Docker Images
+# 1.5. Seed Database
+Write-Host "`n[1.5/6] Seeding the Global DynamoDB Database..." -ForegroundColor Cyan
+node .\scripts\seed-db.js
+
+# 2. Push Docker Images
 Write-Host "`n[2/6] Building and Pushing Docker Images to AWS ECR..." -ForegroundColor Cyan
 & .\scripts\push_to_ecr.ps1
 
