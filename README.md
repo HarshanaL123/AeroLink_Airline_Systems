@@ -9,7 +9,7 @@
 
 ## 🏗️ Architectural Overview
 
-![AeroLink Architecture](architecture\architecture_design.png)
+![AeroLink Architecture](architecture/architecture_design.png)
 
 AeroLink transitions legacy airline systems into a modern, decoupled cloud ecosystem. The platform utilizes **Amazon EKS** for compute orchestration, **DynamoDB Global Tables** for multi-region state, and **AWS EventBridge** for asynchronous message routing. 
 
